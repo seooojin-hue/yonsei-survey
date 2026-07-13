@@ -332,8 +332,7 @@ function initLikert(prefix, count) {
 // ============================================================
 function Survey0({ onSubmit }) {
   const [answers, setAnswers] = useState({
-    gender: "", grade: "", studentId: "", name: "",
-    ...initLikert("s0q1", s0_q1.length),
+    gender: "", grade: "", ...initLikert("s0q1", s0_q1.length),
     ...initLikert("s0q2", s0_q2.length),
     ...initLikert("s0q3", s0_q3.length),
     ...initLikert("s0q4", s23_q3.length),
@@ -372,16 +371,6 @@ function Survey0({ onSubmit }) {
                     checked={answers.grade === v} onChange={(e) => set("grade", e.target.value)} />
                 ))}
               </div>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={6}>
-              <Form.Label className="fw-semibold">학번</Form.Label>
-              <Form.Control size="sm" value={answers.studentId} onChange={(e) => set("studentId", e.target.value)} />
-            </Col>
-            <Col md={6}>
-              <Form.Label className="fw-semibold">성명</Form.Label>
-              <Form.Control size="sm" value={answers.name} onChange={(e) => set("name", e.target.value)} />
             </Col>
           </Row>
         </Card.Body>
@@ -453,8 +442,7 @@ function Results0({ responses }) {
 // ============================================================
 function Survey1({ onSubmit }) {
   const [answers, setAnswers] = useState({
-    gender: "", grade: "", studentId: "", name: "",
-    career: { 보건의료정보부서: "", 보건교육: "", 병원행정부서: "", 공무원: "", 보험회사: "" },
+    gender: "", grade: "", career: { 보건의료정보부서: "", 보건교육: "", 병원행정부서: "", 공무원: "", 보험회사: "" },
     careerOther: "", certs: [], certOther: "", q3: "", q4: 0, improve: {},
     weakSubs: [], subRatings: {},
   });
@@ -498,12 +486,6 @@ function Survey1({ onSubmit }) {
                 ))}
               </div>
             </Col>
-          </Row>
-          <Row>
-            <Col md={6}><Form.Label className="fw-semibold">학번</Form.Label>
-              <Form.Control size="sm" value={answers.studentId} onChange={(e) => set("studentId", e.target.value)} /></Col>
-            <Col md={6}><Form.Label className="fw-semibold">성명</Form.Label>
-              <Form.Control size="sm" value={answers.name} onChange={(e) => set("name", e.target.value)} /></Col>
           </Row>
           <div className="d-flex gap-2 flex-wrap mt-3">
             {["1학년","2학년","3학년","4학년"].map((v) => (
@@ -864,8 +846,7 @@ const Q7_OPTIONS = ["신입생 OT","전과생 OT","학과 MT","학과 사무실 
 
 function Survey4({ onSubmit }) {
   const [answers, setAnswers] = useState({
-    enrollYear:"", name:"",
-    q3:"", q4:"", q5:"", q6:"",
+    enrollYear:"", q3:"", q4:"", q5:"", q6:"",
     q7:[], q7other:"", q8:"", q9:"",
     q10:"", q10other:"", q11:"",
     q12:[], q12other:"",
@@ -1200,8 +1181,7 @@ function Results4({ responses }) {
 // ============================================================
 function Survey5({ onSubmit }) {
   const [answers, setAnswers] = useState({
-    gender:"", grade:"", studentId:"", name:"",
-    weakSubs:[], weakOther:"", comment:"",
+    gender:"", grade:"", weakSubs:[], weakOther:"", comment:"",
   });
   const set = (k, v) => setAnswers((p) => ({ ...p, [k]: v }));
   const toggleWeak = (v) =>
@@ -1236,12 +1216,6 @@ function Survey5({ onSubmit }) {
                 ))}
               </div>
             </Col>
-          </Row>
-          <Row>
-            <Col md={6}><Form.Label className="fw-semibold">학번</Form.Label>
-              <Form.Control size="sm" value={answers.studentId} onChange={e=>set("studentId",e.target.value)} /></Col>
-            <Col md={6}><Form.Label className="fw-semibold">성명</Form.Label>
-              <Form.Control size="sm" value={answers.name} onChange={e=>set("name",e.target.value)} /></Col>
           </Row>
         </Card.Body>
       </Card>
@@ -1298,7 +1272,7 @@ function Results5({ responses }) {
 // ============================================================
 function Survey6({ onSubmit }) {
   const [answers, setAnswers] = useState({
-    gender:"", grade:"", studentId:"", name:"", comment:"",
+    gender:"", grade:"", comment:"",
     ...initLikert("s6q1", s6_q1.length),
   });
   const set = (k, v) => setAnswers((p) => ({ ...p, [k]: v }));
@@ -1332,12 +1306,6 @@ function Survey6({ onSubmit }) {
                 ))}
               </div>
             </Col>
-          </Row>
-          <Row>
-            <Col md={6}><Form.Label className="fw-semibold">학번</Form.Label>
-              <Form.Control size="sm" value={answers.studentId} onChange={e=>set("studentId",e.target.value)} /></Col>
-            <Col md={6}><Form.Label className="fw-semibold">성명</Form.Label>
-              <Form.Control size="sm" value={answers.name} onChange={e=>set("name",e.target.value)} /></Col>
           </Row>
         </Card.Body>
       </Card>
