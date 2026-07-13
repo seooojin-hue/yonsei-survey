@@ -1,0 +1,9 @@
+﻿fastapi
+uvicorn[standard]
+pandas
+openpyxl
+pydantic
+requests
+beautifulsoup4
+python-multipart
+aiofiles
