@@ -1,0 +1,260 @@
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Form, Button, Table, Badge } from 'react-bootstrap';
+import axios from 'axios';
+import * as XLSX from 'xlsx';
+
+const GRADE_POINTS = { 'A': 3, 'B': 3, 'C': 2, 'D': 1, 'F': 0 };
+const YEARS = ['2022', '2023', '2024', '2025', '2026'];
+
+const GradePage = ({ yearFilter, onYearChange }) => {
+  const [subjects, setSubjects] = useState([]);
+  const [poMapping, setPoMapping] = useState({});
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [gradesData, setGradesData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // 성적 데이터 로드 함수
+  const loadGradesData = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/grades/${yearFilter}`);
+      if (response.data && response.data.length > 0) {
+        setGradesData(response.data);
+      } else {
+        setGradesData([]);
+      }
+    } catch (err) {
+      console.error("데이터 로드 실패:", err);
+    }
+  };
+
+  // 1. 데이터 실시간 연동 로직
+  useEffect(() => {
+    if (!yearFilter) return;
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        const subjRes = await axios.get(`http://localhost:8000/api/명세서/courses?year=${yearFilter}`);
+        const specRes = await axios.get(`http://localhost:8000/api/load-draft/${encodeURIComponent('명세서')}`);
+        
+        const rawSubjs = subjRes.data.courses || [];
+        const processedSubjs = rawSubjs.map(s => ({
+          name: s.course_name || s.과목명 || s.교과목명,
+          type: s.area_1 || s.교과영역_1 || '필수',
+          term: s.grade_sem || `${s.개설학년 || '-'}학년 ${s.개설학기 || '-'}학기`,
+          actual: s.actual_sem || ''
+        })).sort((a, b) => {
+          const typeA = String(a.type || '');
+          const typeB = String(b.type || '');
+          return typeA.includes('필수') === typeB.includes('필수') ? 0 : (typeA.includes('필수') ? -1 : 1);
+        });
+        setSubjects(processedSubjs);
+
+        const poMap = {};
+        (specRes.data.rows || []).forEach(row => {
+          const sName = row.course_name || row['교과목명'];
+          const activePos = [];
+          for (let i = 1; i <= 10; i++) {
+            if (row[`po${i}`] === 'O' || row[`PO${i}`] === 'O' || row[`po${i}`] === 'V') activePos.push(`PO${i}`);
+          }
+          if (sName) poMap[sName] = activePos.join(', ');
+        });
+        setPoMapping(poMap);
+
+        // 새로운 성적 로드 함수 호출
+        await loadGradesData();
+      } catch (err) {
+        console.error("데이터 연동 실패:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAllData();
+  }, [yearFilter]);
+
+  // 2. 엑셀 업로드 처리
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file || !selectedSubject) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array', codepage: 949 });
+        const sheetName = workbook.SheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+        const newEntries = [];
+        
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row || !row[0]) continue; 
+
+          const studentId = String(row[0] || '').trim();
+          const name = String(row[1] || '').trim();
+          const isParticipating = String(row[2] || '').trim().toUpperCase() !== 'X';
+          const rawGrade = String(row[3] || 'F').trim().toUpperCase().charAt(0);
+          
+          newEntries.push({
+            id: `G-${yearFilter}-${selectedSubject.name}-${studentId}-${Date.now()}`,
+            year: yearFilter,
+            subject: selectedSubject.name,
+            studentId, name, isParticipating,
+            grade: rawGrade,
+            points: GRADE_POINTS[rawGrade] || 0
+          });
+        }
+
+        if (newEntries.length === 0) {
+          alert("파일에서 데이터를 찾지 못했습니다. 학번|이름|이수|성적 순서인지 확인해주세요.");
+          return;
+        }
+
+        const filtered = gradesData.filter(g => g.subject !== selectedSubject.name);
+        setGradesData([...filtered, ...newEntries]);
+        alert(`✅ [${selectedSubject.name}] ${newEntries.length}명의 성적이 완벽하게 업로드되었습니다.`);
+      } catch (error) {
+        console.error("파일 파싱 에러:", error);
+        alert("파일 처리 중 오류가 발생했습니다.");
+      } finally {
+        e.target.value = '';
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  // 3. 상태 및 평균 계산
+  const getSubjectAvg = (subjName) => {
+    const list = gradesData.filter(g => g.subject === subjName && g.isParticipating);
+    if (list.length === 0) return 0;
+    return (list.reduce((acc, cur) => acc + cur.points, 0) / list.length).toFixed(2);
+  };
+
+  const getStatusIcon = (subjName) => {
+    return gradesData.some(g => g.subject === subjName) ? <Badge bg="success">O</Badge> : <Badge bg="secondary" opacity={0.5}>X</Badge>;
+  };
+
+  // 4. 최종 저장 로직 (요청하신 엔드포인트 반영)
+  const handleFinalSave = async () => {
+    if (!window.confirm("현재 학년도의 모든 성적 데이터를 최종 저장하시겠습니까?")) return;
+    try {
+      await axios.post(`http://localhost:8000/api/save/final/성적`, {
+        year: yearFilter,
+        data: gradesData
+      });
+      alert("✅ 성적 데이터가 서버에 성공적으로 저장되었습니다.");
+    } catch (err) {
+      console.error("저장 실패:", err);
+      alert("❌ 저장 중 오류가 발생했습니다.");
+    }
+  };
+
+  return (
+    <div className="p-4 bg-white min-vh-100 overflow-auto">
+      <div className="d-flex justify-content-between align-items-end mb-4 border-bottom pb-2">
+        <h4 className="fw-bold text-primary m-0">📊 성적 및 PO 성취도 분석</h4>
+        <ul className="nav nav-pills custom-pills">
+          {YEARS.map(y => (
+            <li className="nav-item" key={y}>
+              <button
+                className={`nav-link py-1 px-3 ${yearFilter === y ? 'active fw-bold' : 'text-secondary'}`}
+                onClick={() => { onYearChange(y); setSelectedSubject(null); }}
+              >
+                {y}
+              </button>
+            </li>
+          ))}
+          <li className="nav-item ps-2">
+            <Button variant="outline-secondary" size="sm" onClick={() => {
+              const n = prompt("추가할 연도를 입력하세요");
+              if(n) onYearChange(n);
+            }}>+</Button>
+          </li>
+        </ul>
+      </div>
+
+      <Row className="g-4">
+        {/* 왼쪽: 교과목 목록 영역 */}
+        <Col lg={5}>
+          <Card className="shadow-sm border-0">
+            <Card.Header className="bg-dark text-white fw-bold py-3">{yearFilter}학년도 교과목 리스트</Card.Header>
+            <Card.Body className="p-0">
+              <Table hover responsive className="m-0 text-center align-middle">
+                <thead className="table-light small">
+                  <tr><th>구분</th><th>교과목명</th><th>학년-학기</th><th>입력</th></tr>
+                </thead>
+                <tbody className="small">
+                  {subjects.map((subj, idx) => (
+                    <tr key={idx} onClick={() => setSelectedSubject(subj)} style={{ cursor: 'pointer', backgroundColor: selectedSubject?.name === subj.name ? '#f0f7ff' : '' }}>
+                      <td><Badge bg={subj.type.includes('필수') ? 'danger' : 'primary'}>{subj.type.substring(0,2)}</Badge></td>
+                      <td className="text-start fw-bold">{subj.name}</td>
+                      <td className="text-muted">{subj.term}</td>
+                      <td>{getStatusIcon(subj.name)}</td>
+                    </tr>
+                  ))}
+                  {subjects.length === 0 && !loading && <tr><td colSpan="4" className="py-5 text-muted">데이터가 없습니다.</td></tr>}
+                </tbody>
+              </Table>
+              {loading && <div className="p-4 text-center"><div className="spinner-border spinner-border-sm text-primary" /></div>}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* 오른쪽: 성적 입력 및 PO 상세 영역 */}
+        <Col lg={7}>
+          {selectedSubject ? (
+            <Card className="shadow-sm border-0 border-top border-4 border-primary">
+              <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 className="fw-bold m-0">{selectedSubject.name}</h5>
+                  <Badge bg="info" className="mt-1">연계 PO: {poMapping[selectedSubject.name] || '미지정'}</Badge>
+                </div>
+                <div className="text-end">
+                  <div className="small text-secondary">과목 평균 점수</div>
+                  <div className="fs-3 fw-bold text-primary">{getSubjectAvg(selectedSubject.name)} <small className="fs-6 text-muted">/ 3.00</small></div>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <div className="p-3 bg-light rounded border mb-4">
+                  <Form.Label className="fw-bold small">📁 성적 엑셀 파일 불러오기</Form.Label>
+                  <Form.Control type="file" size="sm" onChange={handleExcelUpload} accept=".xlsx, .xls, .csv" />
+                  <div className="mt-2 x-small text-muted">※ 형식: 학번 | 이름 | 이수여부(O/X) | 성적(A~F)</div>
+                </div>
+
+                <h6 className="fw-bold mb-3">학생별 성적 내역 ({gradesData.filter(g => g.subject === selectedSubject.name).length}명)</h6>
+                <div style={{ maxHeight: '450px', overflowY: 'auto' }} className="border rounded shadow-sm">
+                  <Table size="sm" striped hover className="text-center m-0 align-middle">
+                    <thead className="table-secondary sticky-top small">
+                      <tr><th>학번</th><th>이름</th><th>이수여부</th><th>성적</th><th>점수</th></tr>
+                    </thead>
+                    <tbody className="small">
+                      {gradesData.filter(g => g.subject === selectedSubject.name).map((g, idx) => (
+                        <tr key={idx}>
+                          <td className="text-muted">{g.studentId}</td>
+                          <td className="fw-bold">{g.name}</td>
+                          <td><Badge bg={g.isParticipating ? 'success' : 'secondary'}>{g.isParticipating ? 'O' : 'X'}</Badge></td>
+                          <td className="fw-bold text-primary">{g.grade}</td>
+                          <td>{g.points}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </Card.Body>
+              <Card.Footer className="bg-white text-end py-3">
+                <Button variant="primary" className="px-5 fw-bold shadow-sm" onClick={handleFinalSave}>최종 저장</Button>
+              </Card.Footer>
+            </Card>
+          ) : (
+            <div className="h-100 d-flex flex-column justify-content-center align-items-center text-muted bg-light rounded border border-dashed" style={{ minHeight: '500px' }}>
+              <div className="display-4 mb-3">⬅️</div>
+              <h5 className="fw-bold">왼쪽 과목 목록에서 하나를 선택해 주세요.</h5>
+              <p>선택한 과목의 성적을 관리하고 PO 성취도를 분석할 수 있습니다.</p>
+            </div>
+          )}
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+export default GradePage;

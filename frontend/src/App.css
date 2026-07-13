@@ -1,0 +1,39 @@
+/* App.css 전체 덮어쓰기 */
+
+/* 1. React 최상위 컨테이너의 제한을 풀고 100% 꽉 채우기 */
+html, body, #root {
+  width: 100vw;
+  min-height: 100vh;   /* height: 100vh → min-height로 변경 */
+  height: auto;        /* 추가 */
+  margin: 0;
+  padding: 0;
+  max-width: none !important;
+  overflow-x: hidden;  /* overflow: hidden → x만 hidden으로 변경 */
+  overflow-y: auto;    /* 추가 */
+}
+
+/* 2. TUI Grid가 부모 너비를 따라가도록 강제 */
+.tui-grid-container { 
+  width: 100% !important; 
+}
+
+/* 3. 테이블 레이아웃 고정 (내용이 길어도 찌그러지지 않음) */
+.tui-grid-table { 
+  table-layout: fixed !important; 
+}
+
+/* 4. 기타 UI 애니메이션 및 스크롤바 꾸미기 */
+.hover-bg-secondary:hover { 
+  background-color: rgba(255,255,255,0.1); 
+}
+.transition-all { 
+  transition: all 0.2s ease-in-out; 
+}
+.custom-scrollbar::-webkit-scrollbar { 
+  width: 6px; 
+  height: 6px; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+  background: #444; 
+  border-radius: 10px; 
+}
