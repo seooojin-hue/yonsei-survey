@@ -7,7 +7,7 @@ import {
 // ============================================================
 //  API 설정 — 실제 백엔드 주소로 변경하세요
 // ============================================================
-const API_BASE = "http://localhost:8000";
+const GS_URL = "https://script.google.com/macros/s/AKfycbw-QN9wfe_inEtGkXpU49veyeg5lQO0XhGvJbIoIwb96rkX8-T9j0jdQIfwZsI5KMPf6w/exec";
 import Chart from "chart.js/auto";
 
 // ============================================================
@@ -1377,9 +1377,7 @@ const SurveyPage = () => {
     setApiLoading(p => ({ ...p, [tabKey]: true }));
     setApiError(p => ({ ...p, [tabKey]: null }));
     try {
-      const res = await fetch(`${API_BASE}/api/surveys/${tabKey}/results`, {
-        headers: { "Accept": "application/json" },
-      });
+      const res = await fetch(`${GS_URL}?key=${tabKey}`);
       if (!res.ok) throw new Error(`서버 오류 (${res.status})`);
       const data = await res.json();
       setApiData(p => ({ ...p, [tabKey]: data.responses ?? data }));
@@ -1400,10 +1398,10 @@ const SurveyPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     // 백엔드 저장 (실패해도 로컬은 유지)
     try {
-      await fetch(`${API_BASE}/api/surveys/${tabKey}`, {
+      await fetch(GS_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(answers),
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ survey_key: tabKey, ...answers }),
       });
     } catch (_) { /* 서버 미연결 시 무시 */ }
   };
