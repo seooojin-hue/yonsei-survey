@@ -1928,5 +1928,29 @@ def get_survey_results(survey_key: str):
     rows = _load(survey_key)
     return {"survey_key": survey_key, "count": len(rows), "responses": rows}
 
+# ── 설문 엔드포인트 ──────────────────────────────────
+import os as _os, json as _json, datetime as _dt
+from fastapi import Body as _Body
+from typing import Any as _Any, Dict as _Dict
+
+_SURVEY_DIR = _os.path.join(_os.path.dirname(__file__), "surveys")
+_os.makedirs(_SURVEY_DIR, exist_ok=True)
+_VALID_KEYS = {"s0","s1","s2","s3","s4","s5","s6"}
+
+def _spath(k): return _os.path.join(_SURVEY_DIR, f"{k}.json")
+def _load(k): return _json.load(open(_spath(k), encoding="utf-8")) if _os.path.exists(_spath(k)) else []
+def _save(k, d): _json.dump(d, open(_spath(k),"w",encoding="utf-8"), ensure_ascii=False, indent=2)
+
+@app.post("/api/surveys/{survey_key}")
+def submit_survey(survey_key: str, body: _Dict[str, _Any] = _Body(...)):
+    if survey_key not in _VALID_KEYS: raise HTTPException(status_code=404, detail="없는 설문")
+    rows = _load(survey_key); body["_at"] = _dt.datetime.now().isoformat(); rows.append(body); _save(survey_key, rows)
+    return {"ok": True, "count": len(rows)}
+
+@app.get("/api/surveys/{survey_key}/results")
+def get_survey_results(survey_key: str):
+    if survey_key not in _VALID_KEYS: raise HTTPException(status_code=404, detail="없는 설문")
+    rows = _load(survey_key)
+    return {"survey_key": survey_key, "count": len(rows), "responses": rows}
 if __name__ == "__main__": 
     uvicorn.run(app, host="0.0.0.0", port=8000)
