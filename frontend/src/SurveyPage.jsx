@@ -1499,17 +1499,31 @@ const SurveyPage = () => {
                           <Badge bg="secondary">{displayResponses.length}명 응답</Badge>
                         )}
                       </h5>
-                      <Button variant="outline-primary" size="sm"
-                        disabled={loading}
-                        onClick={() => fetchResults(t.key)}>
-                  <Button size="sm" variant="outline-danger" className="ms-2"
-                    onClick={async () => {
-                      if (!window.confirm("결과를 초기화하시겠습니까?")) return;
-                      await fetch(GS_URL, { method: "POST", headers: {"Content-Type":"text/plain"}, body: JSON.stringify({action:"clear", survey_key: t.key}) });
-                      fetchResults(t.key);
-                    }}>초기화</Button>
-                        {loading ? <Spinner size="sm" animation="border" /> : "🔄 새로고침"}
-                      </Button>
+                      <div className="d-flex gap-2">
+                        <Button variant="outline-primary" size="sm"
+                          disabled={loading}
+                          onClick={() => fetchResults(t.key)}>
+                          {loading ? <Spinner size="sm" animation="border" /> : "🔄 새로고침"}
+                        </Button>
+                        {!loading && displayResponses.length > 0 && (
+                          <Button variant="outline-danger" size="sm"
+                            onClick={() => {
+                              const el = document.getElementById(`results-print-${i}`);
+                              const win = window.open("", "_blank");
+                              win.document.write(`
+                                <html><head>
+                                <title>${t.label} 설문 결과</title>
+                                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+                                <style>body{padding:24px;font-family:'Malgun Gothic',sans-serif;} canvas{max-width:100%!important;}</style>
+                                </head><body>${el.innerHTML}</body></html>
+                              `);
+                              win.document.close();
+                              setTimeout(() => { win.print(); }, 800);
+                            }}>
+                            🖨️ PDF 저장
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
                     {loading && (
@@ -1537,7 +1551,9 @@ const SurveyPage = () => {
                     )}
 
                     {!loading && displayResponses.length > 0 && (
-                      <SurveyResults idx={i} responses={displayResponses} />
+                      <div id={`results-print-${i}`}>
+                        <SurveyResults idx={i} responses={displayResponses} />
+                      </div>
                     )}
                   </Card.Body>
                 </Card>
