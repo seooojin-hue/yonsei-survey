@@ -1509,16 +1509,12 @@ const SurveyPage = () => {
                           <Button variant="outline-danger" size="sm"
                             onClick={() => {
                               const el = document.getElementById(`results-print-${i}`);
-                              const win = window.open("", "_blank");
-                              win.document.write(`
-                                <html><head>
-                                <title>${t.label} 설문 결과</title>
-                                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
-                                <style>body{padding:24px;font-family:'Malgun Gothic',sans-serif;} canvas{max-width:100%!important;}</style>
-                                </head><body>${el.innerHTML}</body></html>
-                              `);
-                              win.document.close();
-                              setTimeout(() => { win.print(); }, 800);
+                              const style = document.createElement("style");
+                              style.id = "print-style";
+                              style.innerHTML = `@media print { body * { visibility: hidden; } #results-print-${i}, #results-print-${i} * { visibility: visible; } #results-print-${i} { position: absolute; left: 0; top: 0; width: 100%; } }`;
+                              document.head.appendChild(style);
+                              window.print();
+                              document.head.removeChild(style);
                             }}>
                             🖨️ PDF 저장
                           </Button>
