@@ -1502,6 +1502,12 @@ const SurveyPage = () => {
                       <Button variant="outline-primary" size="sm"
                         disabled={loading}
                         onClick={() => fetchResults(t.key)}>
+                  <Button size="sm" variant="outline-danger" className="ms-2"
+                    onClick={async () => {
+                      if (!window.confirm("결과를 초기화하시겠습니까?")) return;
+                      await fetch(GS_URL, { method: "POST", headers: {"Content-Type":"text/plain"}, body: JSON.stringify({action:"clear", survey_key: t.key}) });
+                      fetchResults(t.key);
+                    }}>초기화</Button>
                         {loading ? <Spinner size="sm" animation="border" /> : "🔄 새로고침"}
                       </Button>
                     </div>
