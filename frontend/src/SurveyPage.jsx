@@ -327,6 +327,23 @@ function initLikert(prefix, count) {
   return Object.fromEntries(Array.from({ length: count }, (_, i) => [`${prefix}_${i}`, 0]));
 }
 
+// 리커트 테이블 전체 응답 여부 확인 (0 = 미응답)
+const checkLikert = (answers, prefix) =>
+  Object.entries(answers)
+    .filter(([k]) => k.startsWith(prefix + "_"))
+    .every(([, v]) => Number(v) > 0);
+
+// 미응답 항목 알림 + 제출 차단
+const guardSubmit = (e, checks, submitFn) => {
+  e.preventDefault();
+  const missing = checks.filter(c => !c.ok).map(c => c.label);
+  if (missing.length > 0) {
+    alert(`⚠ 응답하지 않은 필수 항목이 있습니다:\n\n${missing.map(m => `• ${m}`).join('\n')}`);
+    return;
+  }
+  submitFn();
+};
+
 // ============================================================
 //  ① 재학생 설문 1
 // ============================================================
@@ -341,7 +358,14 @@ function Survey0({ onSubmit }) {
   const set = (k, v) => setAnswers((p) => ({ ...p, [k]: v }));
 
   return (
-    <Form onSubmit={(e) => { e.preventDefault(); onSubmit(answers); }}>
+    <Form onSubmit={(e) => guardSubmit(e, [
+        { ok: !!answers.gender,                    label: "성별" },
+        { ok: !!answers.grade,                     label: "학년" },
+        { ok: checkLikert(answers, "s0q1"),         label: "Ⅱ. 직무능력 필요도 (전 문항)" },
+        { ok: checkLikert(answers, "s0q2"),         label: "Ⅲ. 핵심역량 필요도 (전 문항)" },
+        { ok: checkLikert(answers, "s0q3"),         label: "Ⅳ. 인재상 및 교과운영 (전 문항)" },
+        { ok: checkLikert(answers, "s0q4"),         label: "Ⅴ. 학습성과 (전 문항)" },
+      ], () => onSubmit(answers))}>
       <SurveyHeader
         title="① 재학생 설문 1"
         subtitle="보건의료정보관리사의 직무 능력 조사 (1차)"
@@ -465,7 +489,13 @@ function Survey1({ onSubmit }) {
   const CAREER_ITEMS = ["보건의료정보부서","보건교육","병원행정부서","공무원","보험회사"];
 
   return (
-    <Form onSubmit={(e) => { e.preventDefault(); onSubmit(answers); }}>
+    <Form onSubmit={(e) => guardSubmit(e, [
+        { ok: !!answers.gender,          label: "성별" },
+        { ok: !!answers.grade,           label: "학년" },
+        { ok: answers.certs.length > 0,  label: "취득 희망 면허/자격증 (1개 이상 선택)" },
+        { ok: !!answers.q3,              label: "홈페이지 공지 인지 여부 (YES/NO)" },
+        { ok: answers.q4 > 0,            label: "진로 설계 도움 여부 (①~⑤ 선택)" },
+      ], () => onSubmit(answers))}>
       <SurveyHeader
         title="② 재학생 설문 2"
         subtitle="진로 및 면허증, 과목별 학습 성취 요구도 측정"
@@ -647,7 +677,17 @@ function Survey2({ onSubmit }) {
   const set = (k, v) => setAnswers((p) => ({ ...p, [k]: v }));
 
   return (
-    <Form onSubmit={(e) => { e.preventDefault(); onSubmit(answers); }}>
+    <Form onSubmit={(e) => guardSubmit(e, [
+        { ok: checkLikert(answers, "s2q1"),  label: "Ⅰ. 교육과정 및 운영 (전 문항)" },
+        { ok: checkLikert(answers, "s2q2"),  label: "Ⅱ. 산업체 만족도 (전 문항)" },
+        { ok: checkLikert(answers, "s2q3"),  label: "Ⅲ. 학습성과 (전 문항)" },
+        { ok: !!answers.gender,              label: "응답자 정보 — 성별" },
+        { ok: !!answers.age.trim(),          label: "응답자 정보 — 연령" },
+        { ok: !!answers.years,               label: "응답자 정보 — 근무년수" },
+        { ok: !!answers.orgType,             label: "응답자 정보 — 산업체 종류" },
+        { ok: !!answers.dept.trim(),         label: "응답자 정보 — 근무 부서" },
+        { ok: !!answers.rank,                label: "응답자 정보 — 직급" },
+      ], () => onSubmit(answers))}>
       <SurveyHeader
         title="③ 산업체 설문"
         subtitle="교육목표 및 교육과정 설정을 위한 요구도 조사"
@@ -744,7 +784,17 @@ function Survey3({ onSubmit }) {
   const set = (k, v) => setAnswers((p) => ({ ...p, [k]: v }));
 
   return (
-    <Form onSubmit={(e) => { e.preventDefault(); onSubmit(answers); }}>
+    <Form onSubmit={(e) => guardSubmit(e, [
+        { ok: checkLikert(answers, "s3q1"),  label: "Ⅰ. 교육과정 및 운영 (전 문항)" },
+        { ok: checkLikert(answers, "s3q2"),  label: "Ⅱ. 졸업생 만족도 (전 문항)" },
+        { ok: checkLikert(answers, "s3q3"),  label: "Ⅲ. 학습성과 (전 문항)" },
+        { ok: !!answers.gender,              label: "응답자 정보 — 성별" },
+        { ok: !!answers.age.trim(),          label: "응답자 정보 — 연령" },
+        { ok: !!answers.years,               label: "응답자 정보 — 근무년수" },
+        { ok: !!answers.orgType,             label: "응답자 정보 — 산업체 종류" },
+        { ok: !!answers.dept.trim(),         label: "응답자 정보 — 근무 부서" },
+        { ok: !!answers.rank,                label: "응답자 정보 — 직급" },
+      ], () => onSubmit(answers))}>
       <SurveyHeader
         title="④ 졸업생 설문"
         subtitle="교육목표 및 교육과정 설정을 위한 요구도 조사"
@@ -905,7 +955,13 @@ function Survey4({ onSubmit }) {
   };
 
   const handleSubmitClick = () => {
-    if (validate()) onSubmit(answers);
+    const missing = REQUIRED.filter(({ check }) => !check(answers)).map(({ key }) => key);
+    if (missing.length > 0) {
+      alert(`미응답 항목: ${missing.join(", ")}\n\n총 ${missing.length}개 문항을 응답해주세요.`);
+      validate();
+      return;
+    }
+    onSubmit(answers);
   };
 
   const errStyle = key => errors[key]
@@ -1290,7 +1346,12 @@ function Survey5({ onSubmit }) {
     setAnswers(p => ({ ...p, weakSubs: p.weakSubs.includes(v) ? p.weakSubs.filter(s=>s!==v) : [...p.weakSubs, v] }));
 
   return (
-    <Form onSubmit={(e) => { e.preventDefault(); onSubmit(answers); }}>
+    <Form onSubmit={(e) => guardSubmit(e, [
+        { ok: !!answers.gender,               label: "성별" },
+        { ok: !!answers.grade,                label: "학년" },
+        { ok: answers.weakSubs.length > 0,    label: "취약 과목 (1개 이상 선택)" },
+        { ok: !!answers.comment.trim(),       label: "국가시험 대비 프로그램 건의사항" },
+      ], () => onSubmit(answers))}>
       <SurveyHeader
         title="⑥ 국가시험 지원 프로그램 요구도 조사"
         subtitle="보건의료정보관리사 국가시험 응시 대상자 대상"
@@ -1380,7 +1441,12 @@ function Survey6({ onSubmit }) {
   const set = (k, v) => setAnswers((p) => ({ ...p, [k]: v }));
 
   return (
-    <Form onSubmit={(e) => { e.preventDefault(); onSubmit(answers); }}>
+    <Form onSubmit={(e) => guardSubmit(e, [
+        { ok: !!answers.gender,              label: "성별" },
+        { ok: !!answers.grade,               label: "학년" },
+        { ok: checkLikert(answers, "s6q1"),  label: "Ⅱ. 국시 특강 및 모의고사 만족도 (전 문항)" },
+        { ok: !!answers.comment.trim(),      label: "국가시험 대비 프로그램 건의사항" },
+      ], () => onSubmit(answers))}>
       <SurveyHeader
         title="⑦ 국가시험 지원 프로그램 만족도 조사"
         subtitle="보건의료정보관리사 국가시험 응시 대상자 대상"
