@@ -8,6 +8,9 @@ import {
 //  API 설정 — 실제 백엔드 주소로 변경하세요
 // ============================================================
 const GS_URL = "https://script.google.com/macros/s/AKfycbw-QN9wfe_inEtGkXpU49veyeg5lQO0XhGvJbIoIwb96rkX8-T9j0jdQIfwZsI5KMPf6w/exec";
+
+// ── 관리자 비밀번호 (변경 후 git push 하세요) ──────────────────────────────
+const ADMIN_PASSWORD = "yonsei2024";
 import Chart from "chart.js/auto";
 
 // ============================================================
@@ -1539,6 +1542,29 @@ const SurveyPage = () => {
   const [apiLoading, setApiLoading] = useState({});
   const [apiError, setApiError] = useState({});
 
+  // ── 관리자 인증 ────────────────────────────────────────────────────────────
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
+
+  const checkPassword = () => {
+    if (pwInput === ADMIN_PASSWORD) {
+      setAdminUnlocked(true);
+      setPwError(false);
+      setPwInput("");
+    } else {
+      setPwError(true);
+      setPwInput("");
+    }
+  };
+
+  const resetResults = (tabKey) => {
+    if (!window.confirm("이 설문의 로컬 결과 데이터를 초기화하시겠습니까?\n(서버에 저장된 데이터는 유지됩니다)")) return;
+    setLocalResponses(p => ({ ...p, [tabKey]: [] }));
+    setApiData(p => ({ ...p, [tabKey]: undefined }));
+    setActiveMode(p => ({ ...p, [tabKey]: "form" }));
+  };
+
   const SURVEY_FORMS = [Survey0, Survey1, Survey2, Survey3, Survey4, Survey5, Survey6];
 
   const fetchResults = useCallback(async (tabKey) => {
@@ -1657,7 +1683,37 @@ const SurveyPage = () => {
                 )
               )}
 
-              {mode === "results" && (
+              {mode === "results" && !adminUnlocked && (
+                <Card className="shadow-sm border-0">
+                  <Card.Body className="text-center py-5">
+                    <div style={{ fontSize: 48 }}>🔒</div>
+                    <h5 className="mt-3 mb-1">관리자 전용</h5>
+                    <p className="text-muted mb-4" style={{ fontSize: 13 }}>
+                      설문 결과를 보려면 관리자 비밀번호를 입력하세요.
+                    </p>
+                    <div className="d-flex justify-content-center gap-2">
+                      <Form.Control
+                        type="password"
+                        placeholder="비밀번호"
+                        value={pwInput}
+                        onChange={e => { setPwInput(e.target.value); setPwError(false); }}
+                        onKeyDown={e => e.key === "Enter" && checkPassword()}
+                        isInvalid={pwError}
+                        style={{ maxWidth: 200 }}
+                        autoFocus
+                      />
+                      <Button variant="primary" onClick={checkPassword}>확인</Button>
+                    </div>
+                    {pwError && (
+                      <p className="text-danger mt-2 mb-0" style={{ fontSize: 13 }}>
+                        비밀번호가 올바르지 않습니다.
+                      </p>
+                    )}
+                  </Card.Body>
+                </Card>
+              )}
+
+              {mode === "results" && adminUnlocked && (
                 <Card className="shadow-sm border-0">
                   <Card.Body>
                     <div className="d-flex justify-content-between align-items-center mb-3">
@@ -1667,11 +1723,21 @@ const SurveyPage = () => {
                           <Badge bg="secondary">{displayResponses.length}명 응답</Badge>
                         )}
                       </h5>
-                      <Button variant="outline-primary" size="sm"
-                        disabled={loading}
-                        onClick={() => fetchResults(t.key)}>
-                        {loading ? <Spinner size="sm" animation="border" /> : "🔄 새로고침"}
-                      </Button>
+                      <div className="d-flex gap-2">
+                        <Button variant="outline-danger" size="sm"
+                          onClick={() => resetResults(t.key)}>
+                          🗑 초기화
+                        </Button>
+                        <Button variant="outline-primary" size="sm"
+                          disabled={loading}
+                          onClick={() => fetchResults(t.key)}>
+                          {loading ? <Spinner size="sm" animation="border" /> : "🔄 새로고침"}
+                        </Button>
+                        <Button variant="outline-secondary" size="sm"
+                          onClick={() => { setAdminUnlocked(false); switchMode(t.key, "form"); }}>
+                          🔒 잠금
+                        </Button>
+                      </div>
                     </div>
 
                     {loading && (
