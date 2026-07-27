@@ -11,7 +11,6 @@ const GS_URL = "https://script.google.com/macros/s/AKfycbw-QN9wfe_inEtGkXpU49vey
 
 // ── 관리자 비밀번호 (변경 후 git push 하세요) ──────────────────────────────
 const ADMIN_PASSWORD = "yonsei2024";
-import Chart from "chart.js/auto";
 
 // ============================================================
 //  상수 데이터 정의
