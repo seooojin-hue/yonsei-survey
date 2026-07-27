@@ -1558,11 +1558,22 @@ const SurveyPage = () => {
     }
   };
 
-  const resetResults = (tabKey) => {
-    if (!window.confirm("이 설문의 로컬 결과 데이터를 초기화하시겠습니까?\n(서버에 저장된 데이터는 유지됩니다)")) return;
-    setLocalResponses(p => ({ ...p, [tabKey]: [] }));
-    setApiData(p => ({ ...p, [tabKey]: undefined }));
-    setActiveMode(p => ({ ...p, [tabKey]: "form" }));
+  const resetResults = async (tabKey) => {
+    if (!window.confirm(`[${tabKey}] 설문의 서버 데이터를 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+    try {
+      const res = await fetch(GS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "clear", survey_key: tabKey }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "알 수 없는 오류");
+      setLocalResponses(p => ({ ...p, [tabKey]: [] }));
+      setApiData(p => ({ ...p, [tabKey]: [] }));
+      alert("✅ 서버 데이터가 초기화되었습니다.");
+    } catch (e) {
+      alert(`❌ 초기화 실패: ${e.message}`);
+    }
   };
 
   const SURVEY_FORMS = [Survey0, Survey1, Survey2, Survey3, Survey4, Survey5, Survey6];
