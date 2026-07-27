@@ -853,8 +853,51 @@ function Survey4({ onSubmit }) {
     q13: Object.fromEntries(CAREERS_S4.map(c=>[c,0])),
     q14:"",
   });
+  const [errors, setErrors] = useState({});
+
   const set = (k,v) => setAnswers(p=>({...p,[k]:v}));
   const toggle = (key,v) => setAnswers(p=>({...p,[key]: p[key].includes(v)?p[key].filter(x=>x!==v):[...p[key],v]}));
+
+  // 필수 문항 ref (미응답 시 스크롤 이동)
+  const refEnrollYear = useRef(null);
+  const refQ3  = useRef(null);
+  const refQ5  = useRef(null);
+  const refQ6  = useRef(null);
+  const refQ8  = useRef(null);
+  const refQ9  = useRef(null);
+  const refQ10 = useRef(null);
+  const refQ11 = useRef(null);
+
+  const REQUIRED = [
+    { key:"enrollYear", ref:refEnrollYear, check: a => a.enrollYear.trim() !== "" },
+    { key:"q3",  ref:refQ3,  check: a => a.q3  !== "" },
+    { key:"q5",  ref:refQ5,  check: a => a.q5  !== "" },
+    { key:"q6",  ref:refQ6,  check: a => a.q6  !== "" },
+    { key:"q8",  ref:refQ8,  check: a => a.q8  !== "" },
+    { key:"q9",  ref:refQ9,  check: a => a.q9  !== "" },
+    { key:"q10", ref:refQ10, check: a => a.q10 !== "" },
+    { key:"q11", ref:refQ11, check: a => a.q11 !== "" },
+  ];
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newErrors = {};
+    REQUIRED.forEach(({ key, check }) => { if (!check(answers)) newErrors[key] = true; });
+    setErrors(newErrors);
+    const first = REQUIRED.find(({ key }) => newErrors[key]);
+    if (first) {
+      first.ref.current?.scrollIntoView({ behavior:"smooth", block:"center" });
+      return;
+    }
+    onSubmit(answers);
+  };
+
+  const errStyle = key => errors[key]
+    ? { border:"2px solid #dc3545", borderRadius:8, background:"#fff5f5", padding:"12px" }
+    : {};
+  const errMsg = key => errors[key]
+    ? <div className="text-danger small mt-1">⚠ 필수 응답 항목입니다.</div>
+    : null;
 
   const YN = ({name,val,onChange}) => (
     <div className="d-flex gap-4 mt-2">
@@ -866,7 +909,7 @@ function Survey4({ onSubmit }) {
   );
 
   return (
-    <Form onSubmit={(e)=>{e.preventDefault();onSubmit(answers);}}>
+    <Form onSubmit={handleSubmit}>
       <SurveyHeader
         title="⑤ 교육목표 인지도 설문"
         subtitle="교육 목표 인지도 설문 조사"
@@ -876,23 +919,26 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0">
         <Card.Body>
           <Row className="mb-3">
-            <Col md={6}>
-              <Form.Label className="fw-semibold">1. 입학년도</Form.Label>
-              <Form.Control size="sm" placeholder="예: 2021" value={answers.enrollYear} onChange={e=>set("enrollYear",e.target.value)} />
-            </Col>
-            <Col md={6}>
-              <Form.Label className="fw-semibold">2. 이름</Form.Label>
-              <Form.Control size="sm" value={answers.name} onChange={e=>set("name",e.target.value)} />
+            <Col md={6} ref={refEnrollYear}>
+              <div style={errStyle("enrollYear")}>
+                <Form.Label className="fw-semibold">1. 입학년도</Form.Label>
+                <Form.Control size="sm" placeholder="예: 2021" value={answers.enrollYear}
+                  onChange={e=>{ set("enrollYear",e.target.value); setErrors(p=>({...p,enrollYear:false})); }} />
+                {errMsg("enrollYear")}
+              </div>
             </Col>
           </Row>
         </Card.Body>
       </Card>
 
-      <Card className="mb-3 shadow-sm border-0">
+      <Card className="mb-3 shadow-sm border-0" ref={refQ3}>
         <Card.Body>
-          <Form.Label className="fw-semibold">3. 입학 전에 보건의료정보관리사(구, 의무기록사)에 대하여 알고 있었습니까?</Form.Label>
-          <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
-          <YN name="s4q3" val={answers.q3} onChange={v=>set("q3",v)} />
+          <div style={errStyle("q3")}>
+            <Form.Label className="fw-semibold">3. 입학 전에 보건의료정보관리사(구, 의무기록사)에 대하여 알고 있었습니까?</Form.Label>
+            <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
+            <YN name="s4q3" val={answers.q3} onChange={v=>{ set("q3",v); setErrors(p=>({...p,q3:false})); }} />
+            {errMsg("q3")}
+          </div>
           <div className="mt-3">
             <Form.Label className="fw-semibold">4. * 알고 있었다면 정보를 취득한 계기나 경로를 적어주시오.</Form.Label>
             <Form.Control as="textarea" rows={3} value={answers.q4} onChange={e=>set("q4",e.target.value)} />
@@ -900,11 +946,14 @@ function Survey4({ onSubmit }) {
         </Card.Body>
       </Card>
 
-      <Card className="mb-3 shadow-sm border-0">
+      <Card className="mb-3 shadow-sm border-0" ref={refQ5}>
         <Card.Body>
-          <Form.Label className="fw-semibold">5. {UNIV}와 AI보건정보관리학과, 교육 목적과 보건의료정보관리교육 프로그램 목적이 있습니다. 보건의료정보관리교육 프로그램의 목적에 대해서 잘 알고 계십니까?</Form.Label>
-          <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
-          <YN name="s4q5" val={answers.q5} onChange={v=>set("q5",v)} />
+          <div style={errStyle("q5")}>
+            <Form.Label className="fw-semibold">5. {UNIV}와 AI보건정보관리학과, 교육 목적과 보건의료정보관리교육 프로그램 목적이 있습니다. 보건의료정보관리교육 프로그램의 목적에 대해서 잘 알고 계십니까?</Form.Label>
+            <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
+            <YN name="s4q5" val={answers.q5} onChange={v=>{ set("q5",v); setErrors(p=>({...p,q5:false})); }} />
+            {errMsg("q5")}
+          </div>
         </Card.Body>
       </Card>
 
@@ -978,7 +1027,10 @@ function Survey4({ onSubmit }) {
             </Table>
           </div>
           <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
-          <YN name="s4q6" val={answers.q6} onChange={v=>set("q6",v)} />
+          <div ref={refQ6} style={errStyle("q6")}>
+            <YN name="s4q6" val={answers.q6} onChange={v=>{ set("q6",v); setErrors(p=>({...p,q6:false})); }} />
+            {errMsg("q6")}
+          </div>
         </Card.Body>
       </Card>
 
@@ -999,23 +1051,29 @@ function Survey4({ onSubmit }) {
         </Card.Body>
       </Card>
 
-      <Card className="mb-3 shadow-sm border-0">
+      <Card className="mb-3 shadow-sm border-0" ref={refQ8}>
         <Card.Body>
-          <Form.Label className="fw-semibold">8. 현재 보건의료정보관리사 교육프로그램과 프로그램 최종성과(Program Output)가 홈페이지와 인터넷 포털에 공지되어 있다는 것을 알고 있습니까?</Form.Label>
-          <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
-          <YN name="s4q8" val={answers.q8} onChange={v=>set("q8",v)} />
+          <div style={errStyle("q8")}>
+            <Form.Label className="fw-semibold">8. 현재 보건의료정보관리사 교육프로그램과 프로그램 최종성과(Program Output)가 홈페이지와 인터넷 포털에 공지되어 있다는 것을 알고 있습니까?</Form.Label>
+            <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
+            <YN name="s4q8" val={answers.q8} onChange={v=>{ set("q8",v); setErrors(p=>({...p,q8:false})); }} />
+            {errMsg("q8")}
+          </div>
         </Card.Body>
       </Card>
 
-      <Card className="mb-3 shadow-sm border-0">
+      <Card className="mb-3 shadow-sm border-0" ref={refQ9}>
         <Card.Body>
-          <Form.Label className="fw-semibold">9. 학기 초 이루어진 보건의료정보관리사 인증제도의 교육프로그램의 프로그램 이수 교과과정과 최종성과(Program Output)에 대한 강의는 본인의 진로 설계에 도움이 되었습니까?</Form.Label>
-          <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
-          <div className="d-flex gap-3 flex-wrap mt-2">
-            {["전혀 아니다","아니다","보통이다","그렇다","매우 그렇다"].map(v=>(
-              <Form.Check key={v} type="radio" label={v} name="s4q9" value={v}
-                checked={answers.q9===v} onChange={e=>set("q9",e.target.value)} />
-            ))}
+          <div style={errStyle("q9")}>
+            <Form.Label className="fw-semibold">9. 학기 초 이루어진 보건의료정보관리사 인증제도의 교육프로그램의 프로그램 이수 교과과정과 최종성과(Program Output)에 대한 강의는 본인의 진로 설계에 도움이 되었습니까?</Form.Label>
+            <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
+            <div className="d-flex gap-3 flex-wrap mt-2">
+              {["전혀 아니다","아니다","보통이다","그렇다","매우 그렇다"].map(v=>(
+                <Form.Check key={v} type="radio" label={v} name="s4q9" value={v}
+                  checked={answers.q9===v} onChange={e=>{ set("q9",e.target.value); setErrors(p=>({...p,q9:false})); }} />
+              ))}
+            </div>
+            {errMsg("q9")}
           </div>
         </Card.Body>
       </Card>
@@ -1034,11 +1092,14 @@ function Survey4({ onSubmit }) {
             </Table>
           </div>
           <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
-          <div className="d-flex gap-4 mt-1">
-            {["예","아니오","기타"].map(v=>(
-              <Form.Check key={v} type="radio" label={v} name="s4q10" value={v}
-                checked={answers.q10===v} onChange={e=>set("q10",e.target.value)} />
-            ))}
+          <div ref={refQ10} style={errStyle("q10")}>
+            <div className="d-flex gap-4 mt-1">
+              {["예","아니오","기타"].map(v=>(
+                <Form.Check key={v} type="radio" label={v} name="s4q10" value={v}
+                  checked={answers.q10===v} onChange={e=>{ set("q10",e.target.value); setErrors(p=>({...p,q10:false})); }} />
+              ))}
+            </div>
+            {errMsg("q10")}
           </div>
           {answers.q10==="기타" && (
             <Form.Control size="sm" className="mt-2" placeholder="기타 내용 기재" value={answers.q10other} onChange={e=>set("q10other",e.target.value)} />
@@ -1065,7 +1126,10 @@ function Survey4({ onSubmit }) {
             </Table>
           </div>
           <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
-          <YN name="s4q11" val={answers.q11} onChange={v=>set("q11",v)} />
+          <div ref={refQ11} style={errStyle("q11")}>
+            <YN name="s4q11" val={answers.q11} onChange={v=>{ set("q11",v); setErrors(p=>({...p,q11:false})); }} />
+            {errMsg("q11")}
+          </div>
         </Card.Body>
       </Card>
 
@@ -1120,9 +1184,15 @@ function Survey4({ onSubmit }) {
         </Card.Body>
       </Card>
 
+      {Object.values(errors).some(Boolean) && (
+        <Alert variant="danger" className="text-center">
+          ⚠ 응답하지 않은 필수 항목이 있습니다. 빨간 테두리 항목을 확인해주세요.
+        </Alert>
+      )}
+
       <div className="d-flex gap-2 justify-content-center my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
-        <Button type="reset" variant="outline-secondary">초기화</Button>
+        <Button type="reset" variant="outline-secondary" onClick={()=>setErrors({})}>초기화</Button>
       </div>
     </Form>
   );
@@ -1499,27 +1569,11 @@ const SurveyPage = () => {
                           <Badge bg="secondary">{displayResponses.length}명 응답</Badge>
                         )}
                       </h5>
-                      <div className="d-flex gap-2">
-                        <Button variant="outline-primary" size="sm"
-                          disabled={loading}
-                          onClick={() => fetchResults(t.key)}>
-                          {loading ? <Spinner size="sm" animation="border" /> : "🔄 새로고침"}
-                        </Button>
-                        {!loading && displayResponses.length > 0 && (
-                          <Button variant="outline-danger" size="sm"
-                            onClick={() => {
-                              const el = document.getElementById(`results-print-${i}`);
-                              const style = document.createElement("style");
-                              style.id = "print-style";
-                              style.innerHTML = `@media print { body * { visibility: hidden; } #results-print-${i}, #results-print-${i} * { visibility: visible; } #results-print-${i} { position: absolute; left: 0; top: 0; width: 100%; } }`;
-                              document.head.appendChild(style);
-                              window.print();
-                              document.head.removeChild(style);
-                            }}>
-                            🖨️ PDF 저장
-                          </Button>
-                        )}
-                      </div>
+                      <Button variant="outline-primary" size="sm"
+                        disabled={loading}
+                        onClick={() => fetchResults(t.key)}>
+                        {loading ? <Spinner size="sm" animation="border" /> : "🔄 새로고침"}
+                      </Button>
                     </div>
 
                     {loading && (

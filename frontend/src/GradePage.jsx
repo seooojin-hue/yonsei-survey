@@ -1,6 +1,6 @@
 /**
  * GradePage.jsx
- * 
+ *
  * 의존성 추가 필요:
  *   npm install docx
  */
@@ -19,6 +19,50 @@ import {
 const GRADE_POINTS  = { A: 3, B: 3, C: 2, D: 1, F: 0 };
 const YEARS         = ['2022', '2023', '2024', '2025', '2026'];
 const PO_COLUMNS    = ['PO1','PO2','PO3','PO4','PO5','PO6','PO7','PO8','PO9','PO10'];
+
+// ── 선-후수 관계 (표 2.7.2-1) ─────────────────────────────────────────────────
+const RELATIONS = [
+  { pre: '의학용어',           post: '질병및의료행위분류' },
+  { pre: '의학용어',           post: '의무기록정보분석실무' },
+  { pre: '의학용어',           post: '의무기록정보질향상실무' },
+  { pre: '의학용어',           post: '암등록' },
+  { pre: '의학용어',           post: '건강보험이론및실무' },
+  { pre: '병리학',             post: '질병및의료행위분류' },
+  { pre: '병리학',             post: '의무기록정보분석실무' },
+  { pre: '병리학',             post: '의무기록정보질향상실무' },
+  { pre: '병리학',             post: '암등록' },
+  { pre: '병리학',             post: '건강보험이론및실무' },
+  { pre: '인체해부생리학',     post: '질병및의료행위분류' },
+  { pre: '인체해부생리학',     post: '의무기록정보분석실무' },
+  { pre: '인체해부생리학',     post: '의무기록정보질향상실무' },
+  { pre: '인체해부생리학',     post: '암등록' },
+  { pre: '인체해부생리학',     post: '건강보험이론및실무' },
+  { pre: '질병및의료행위분류', post: '의무기록정보질향상실무' },
+  { pre: '보건의료정보관리학', post: '보건의료정보관리실무' },
+];
+
+// ── Pearson 상관계수 (순수 JS) ────────────────────────────────────────────────
+const pearsonR = (x, y) => {
+  const n = x.length;
+  if (n < 3) return null;
+  const mx = x.reduce((a, b) => a + b, 0) / n;
+  const my = y.reduce((a, b) => a + b, 0) / n;
+  const num = x.reduce((s, xi, i) => s + (xi - mx) * (y[i] - my), 0);
+  const sx  = Math.sqrt(x.reduce((s, xi) => s + (xi - mx) ** 2, 0));
+  const sy  = Math.sqrt(y.reduce((s, yi) => s + (yi - my) ** 2, 0));
+  if (sx < 1e-10 || sy < 1e-10) return null;
+  return +(num / (sx * sy)).toFixed(3);
+};
+
+const interpretR = r => {
+  if (r === null) return { label: '데이터 부족', color: 'secondary', hex: '#adb5bd' };
+  const ar = Math.abs(r);
+  if (ar >= 0.7) return { label: '강한 상관', color: 'danger',  hex: '#e74c3c' };
+  if (ar >= 0.4) return { label: '중간 상관', color: 'warning', hex: '#e67e22' };
+  if (ar >= 0.2) return { label: '약한 상관', color: 'info',    hex: '#2980b9' };
+  return           { label: '거의 없음', color: 'secondary', hex: '#95a5a6' };
+};
+
 
 const STATIC_PO_MAPPING = [
   { keywords: ['보건의료정보관리학'],                       pos: ['PO1','PO2'] },
@@ -71,7 +115,7 @@ const LS = {
   set: (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
   del: key => { try { localStorage.removeItem(key); } catch {} },
 };
-const getSavedAt = year => { try { return localStorage.getItem(LS.savedAtKey(year)) || null; } catch { return null; } };
+const getSavedAt  = year => { try { return localStorage.getItem(LS.savedAtKey(year)) || null; } catch { return null; } };
 const writeSavedAt = year => { try { localStorage.setItem(LS.savedAtKey(year), new Date().toLocaleString('ko-KR')); } catch {} };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -107,7 +151,6 @@ const makeCell = (text, opts = {}) => {
   });
 };
 
-// [표 2.7.1-X] PO별 성취도 측정 실적 테이블
 const buildPoAchievementTable = (year, subjects, gradesData, apiPoMap) => {
   const W = [560, 700, 560, 2800, 1440, 2700];
   const poGroups = PO_COLUMNS
@@ -120,7 +163,6 @@ const buildPoAchievementTable = (year, subjects, gradesData, apiPoMap) => {
     if (!list.length) return null;
     return ((list.filter(g => g.grade !== 'D' && g.grade !== 'F').length / list.length) * 100).toFixed(1) + '%';
   };
-
   const getGoalLines = poSubjs => {
     const withData = poSubjs.filter(s => gradesData.some(g => g.subject === s.name));
     if (!withData.length) return ['진행예정'];
@@ -180,7 +222,6 @@ const buildPoAchievementTable = (year, subjects, gradesData, apiPoMap) => {
   return new DocxTable({ width: { size: 9360, type: WidthType.DXA }, columnWidths: W, rows: [header, ...rows] });
 };
 
-// [표 2.7.1-7] 프로그램 최종성과 PO 성취도 표 (가로)
 const buildPoOverallTable = (year, subjects, gradesData, apiPoMap) => {
   const POW = 510;
   const W   = [560, 700, 2000, ...Array(10).fill(POW), 700];
@@ -256,18 +297,20 @@ const buildPoOverallTable = (year, subjects, gradesData, apiPoMap) => {
 // 메인 컴포넌트
 // ─────────────────────────────────────────────────────────────────────────────
 const GradePage = ({ yearFilter, onYearChange }) => {
-  const [subjects,        setSubjects]        = useState([]);
-  const [apiPoMap,        setApiPoMap]        = useState({});
-  const [selectedSubject, setSelectedSubject] = useState(null);
-  const [gradesData,      setGradesData]      = useState([]);
-  const [loading,         setLoading]         = useState(false);
-  const [activeTab,       setActiveTab]       = useState('input');
-  const [savedAt,         setSavedAtState]    = useState(null);
-  const [saveStatus,      setSaveStatus]      = useState('');
-  const [exporting,       setExporting]       = useState(false);
+  const [subjects,          setSubjects]          = useState([]);
+  const [apiPoMap,          setApiPoMap]          = useState({});
+  const [selectedSubject,   setSelectedSubject]   = useState(null);
+  const [gradesData,        setGradesData]        = useState([]);
+  const [loading,           setLoading]           = useState(false);
+  const [activeTab,         setActiveTab]         = useState('input');
+  const [savedAt,           setSavedAtState]      = useState(null);
+  const [saveStatus,        setSaveStatus]        = useState('');
+  const [exporting,         setExporting]         = useState(false);
+  // ── 상관계수 탭 전용 state ────────────────────────────────────────────────
+  const [selectedCorrelIdx, setSelectedCorrelIdx] = useState(0);
+
   const isFirstRender = useRef(true);
 
-  // gradesData 변경 시 자동 백업
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     if (!yearFilter || !gradesData.length) return;
@@ -378,7 +421,6 @@ const GradePage = ({ yearFilter, onYearChange }) => {
     return (list.reduce((a, c) => a + (Number(c.points)||0), 0) / list.length).toFixed(2);
   };
 
-  // 이수율 % (D·F 제외)
   const getPassRate = subjName => {
     const list = gradesData.filter(g => g.subject === subjName && g.isParticipating);
     if (!list.length) return null;
@@ -444,8 +486,6 @@ const GradePage = ({ yearFilter, onYearChange }) => {
     setSavedAtState(null); setSaveStatus('');
   };
 
-  // ── Word 내보내기: PO별 성취도 ([표 2.7.1-1 ~ 5]) ──────────────────────
-  // 연도→표 번호 고정 매핑: 2022→1, 2023→2, 2024→3, 2025→4, 2026→5
   const YEAR_TABLE_NUM = { '2022': 1, '2023': 2, '2024': 3, '2025': 4, '2026': 5 };
 
   const exportPoAchievementWord = async () => {
@@ -458,10 +498,7 @@ const GradePage = ({ yearFilter, onYearChange }) => {
         const yrGrades   = LS.get(LS.gradesKey(yr))   || (yr === yearFilter ? gradesData : []);
         const yrPoMap    = LS.get(LS.poMapKey(yr))    || (yr === yearFilter ? apiPoMap : {});
         if (!yrSubjects.length) continue;
-
-        // 연도에 해당하는 고정 표 번호 사용 (2022→1, 2023→2, ...)
         const tNum = YEAR_TABLE_NUM[yr] ?? (YEARS.indexOf(yr) + 1);
-
         children.push(new Paragraph({
           children: [new TextRun({
             text: `[표 2.7.1-${tNum}]  ${yr}학년도 PO별 성취도 측정 실적`,
@@ -472,20 +509,10 @@ const GradePage = ({ yearFilter, onYearChange }) => {
         children.push(buildPoAchievementTable(yr, yrSubjects, yrGrades, yrPoMap));
         isFirst = false;
       }
-
       if (!children.length) { alert('내보낼 데이터가 없습니다.\n연도별 과목 데이터를 먼저 로드해주세요.'); return; }
-
       const doc = new Document({
         styles: { default: { document: { run: { font: '맑은 고딕', size: 20 } } } },
-        sections: [{
-          properties: {
-            page: {
-              size: { width: 12240, height: 15840 },
-              margin: { top: 1440, right: 1080, bottom: 1440, left: 1080 },
-            },
-          },
-          children,
-        }],
+        sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1080, bottom: 1440, left: 1080 } } }, children }],
       });
       const blob = await Packer.toBlob(doc);
       const url  = URL.createObjectURL(blob);
@@ -496,27 +523,15 @@ const GradePage = ({ yearFilter, onYearChange }) => {
     finally { setExporting(false); }
   };
 
-  // ── Word 내보내기: PO 성취도 표 ([표 2.7.1-7]) ───────────────────────────
   const exportPoOverallWord = async () => {
     setExporting(true);
     try {
       const doc = new Document({
         styles: { default: { document: { run: { font: '맑은 고딕', size: 20 } } } },
         sections: [{
-          properties: {
-            page: {
-              size: { width: 15840, height: 12240, orientation: PageOrientation.LANDSCAPE },
-              margin: { top: 1080, right: 720, bottom: 1080, left: 720 },
-            },
-          },
+          properties: { page: { size: { width: 15840, height: 12240, orientation: PageOrientation.LANDSCAPE }, margin: { top: 1080, right: 720, bottom: 1080, left: 720 } } },
           children: [
-            new Paragraph({
-              children: [new TextRun({
-                text: `[표 2.7.1-7]  프로그램 최종성과(PO) 성취도 측정 실적  (${yearFilter}학년도)`,
-                bold: true, size: 22, font: '맑은 고딕',
-              })],
-              spacing: { after: 140 },
-            }),
+            new Paragraph({ children: [new TextRun({ text: `[표 2.7.1-7]  프로그램 최종성과(PO) 성취도 측정 실적  (${yearFilter}학년도)`, bold: true, size: 22, font: '맑은 고딕' })], spacing: { after: 140 } }),
             buildPoOverallTable(yearFilter, subjects, gradesData, apiPoMap),
           ],
         }],
@@ -551,8 +566,7 @@ const GradePage = ({ yearFilter, onYearChange }) => {
                     <td className="text-start fw-bold">{subj.name}</td>
                     <td className="text-muted">{subj.term}</td>
                     <td>{gradesData.some(g => g.subject === subj.name)
-                      ? <Badge bg="success">O</Badge> : <Badge bg="secondary">X</Badge>}
-                    </td>
+                      ? <Badge bg="success">O</Badge> : <Badge bg="secondary">X</Badge>}</td>
                   </tr>
                 ))}
                 {!subjects.length && !loading && <tr><td colSpan="4" className="py-5 text-muted">데이터가 없습니다.</td></tr>}
@@ -716,7 +730,7 @@ const GradePage = ({ yearFilter, onYearChange }) => {
   };
 
   // ══════════════════════════════════════════════════════════════════════════
-  //  TAB 3: PO별 성취도 보고 (신규)
+  //  TAB 3: PO별 성취도 보고
   // ══════════════════════════════════════════════════════════════════════════
   const renderPoAchievementTab = () => {
     const poGroups = PO_COLUMNS
@@ -746,42 +760,27 @@ const GradePage = ({ yearFilter, onYearChange }) => {
                   <th style={{ width:'72px' }}>대상</th>
                   <th style={{ width:'68px', backgroundColor:'#FFF2CC' }}>PO</th>
                   <th style={{ minWidth:'260px' }}>평가도구</th>
-                  <th style={{ width:'160px' }}>
-                    수행 측정 결과<br/>
-                    <small className="fw-normal text-muted">(=성취수준)</small>
-                  </th>
+                  <th style={{ width:'160px' }}>수행 측정 결과<br/><small className="fw-normal text-muted">(=성취수준)</small></th>
                   <th style={{ minWidth:'200px' }}>목표달성 여부</th>
                 </tr>
               </thead>
               <tbody>
                 {!poGroups.length && !loading && (
-                  <tr><td colSpan={6} className="py-5 text-muted">
-                    데이터가 없습니다. 과목 목록이 로드된 후 확인하세요.
-                  </td></tr>
+                  <tr><td colSpan={6} className="py-5 text-muted">데이터가 없습니다.</td></tr>
                 )}
                 {poGroups.map(({ po, subjects: poSubjs }, gIdx) => {
-                  const goal      = getPoGoalStatus(poSubjs);
+                  const goal = getPoGoalStatus(poSubjs);
                   const isVeryFirst = gIdx === 0;
                   return poSubjs.map((subj, si) => {
                     const rate = getPassRate(subj.name);
                     return (
                       <tr key={`${po}-${si}`} style={{ cursor:'pointer' }}
                           onClick={() => { setSelectedSubject(subj); setActiveTab('input'); }}>
-                        {isVeryFirst && si === 0 && (
-                          <td rowSpan={totalRows} className="fw-bold bg-light align-middle">{yearFilter}</td>
-                        )}
-                        {isVeryFirst && si === 0 && (
-                          <td rowSpan={totalRows} className="bg-light align-middle" style={{ fontSize:'0.78rem' }}>
-                            {yearFilter}<br/>학년
-                          </td>
-                        )}
-                        {si === 0 && (
-                          <td rowSpan={poSubjs.length} className="fw-bold align-middle"
-                              style={{ backgroundColor:'#FFF2CC', fontSize:'0.9rem' }}>{po}</td>
-                        )}
+                        {isVeryFirst && si === 0 && <td rowSpan={totalRows} className="fw-bold bg-light align-middle">{yearFilter}</td>}
+                        {isVeryFirst && si === 0 && <td rowSpan={totalRows} className="bg-light align-middle" style={{ fontSize:'0.78rem' }}>{yearFilter}<br/>학년</td>}
+                        {si === 0 && <td rowSpan={poSubjs.length} className="fw-bold align-middle" style={{ backgroundColor:'#FFF2CC', fontSize:'0.9rem' }}>{po}</td>}
                         <td className="text-start ps-3">
-                          교과기반평가
-                          <br/><span className="text-muted" style={{ fontSize:'0.72rem' }}>({subj.name})</span>
+                          교과기반평가<br/><span className="text-muted" style={{ fontSize:'0.72rem' }}>({subj.name})</span>
                         </td>
                         <td>
                           {rate !== null
@@ -789,8 +788,7 @@ const GradePage = ({ yearFilter, onYearChange }) => {
                             : <span className="text-secondary small">진행예정</span>}
                         </td>
                         {si === 0 && (
-                          <td rowSpan={poSubjs.length} className={`align-middle ${goal.color}`}
-                              style={{ lineHeight:'1.6' }}>
+                          <td rowSpan={poSubjs.length} className={`align-middle ${goal.color}`} style={{ lineHeight:'1.6' }}>
                             {goal.lines.map((line, li) => (
                               <div key={li} className={li === 0 ? 'fw-semibold' : 'fw-bold'} style={{ fontSize: li === 0 ? '0.78rem' : '0.88rem' }}>
                                 {line}
@@ -808,9 +806,263 @@ const GradePage = ({ yearFilter, onYearChange }) => {
           {loading && <div className="p-4 text-center"><div className="spinner-border spinner-border-sm text-primary"/></div>}
         </Card.Body>
         <Card.Footer className="bg-white text-muted small py-2">
-          💡 행 클릭 → 성적 입력 이동&nbsp;|&nbsp;
-          Word 내보내기: 로컬에 저장된 모든 연도의 [표 2.7.1-1] ~ [표 2.7.1-5] 자동 생성&nbsp;|&nbsp;
-          각 연도 과목 목록을 최소 1회 방문해야 내보내기에 포함됩니다.
+          💡 행 클릭 → 성적 입력 이동&nbsp;|&nbsp;Word 내보내기: 모든 연도 [표 2.7.1-1~5] 자동 생성
+        </Card.Footer>
+      </Card>
+    );
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  TAB 4: 상관계수 분석
+  // ══════════════════════════════════════════════════════════════════════════
+  const renderCorrelationTab = () => {
+    // ── 전체 학년도 성적 통합 (선-후수는 다른 학년도에 입력됨) ──────────
+    const allGrades = YEARS.flatMap(yr =>
+      yr === yearFilter ? gradesData : (LS.get(LS.gradesKey(yr)) || [])
+    );
+
+    // ── 과목명 퍼지 매칭 (괄호/숫자/공백 무시) ─────────────────────────
+    const normName = s => s.replace(/\s+/g, '').replace(/[()（）\d]/g, '');
+    const matchesSubject = (storedName, relName) => {
+      const sn = normName(storedName);
+      const rn = normName(relName);
+      return sn === rn || sn.includes(rn) || rn.includes(sn);
+    };
+
+    // ── 실제 데이터로 상관계수 계산 ──────────────────────────────────────
+    const correls = RELATIONS.map(({ pre, post }) => {
+      const preMap = {};
+      allGrades
+        .filter(g => matchesSubject(g.subject, pre) && g.isParticipating)
+        .forEach(g => { preMap[g.studentId] = Number(g.points); });
+      const matched = allGrades.filter(g =>
+        matchesSubject(g.subject, post) && g.isParticipating && preMap[g.studentId] !== undefined
+      );
+      const xs = matched.map(g => preMap[g.studentId]);
+      const ys = matched.map(g => Number(g.points));
+      const r  = pearsonR(xs, ys);
+      return { pre, post, r, n: matched.length, points: xs.map((x, i) => ({ x, y: ys[i] })) };
+    });
+
+    const totalSubjectsWithData = new Set(allGrades.map(g => g.subject)).size;
+    const sel     = correls[selectedCorrelIdx] ?? correls[0];
+    const selPts  = sel?.points ?? [];
+    const selR    = sel?.r ?? null;
+    const selInterp = interpretR(selR);
+
+    // ── 막대 차트 SVG 설정 ────────────────────────────────────────────────
+    const BW = 700, BH = 250;
+    const BP = { top: 20, right: 30, bottom: 115, left: 48 };
+    const bPW = BW - BP.left - BP.right;
+    const bPH = BH - BP.top - BP.bottom;
+    const bw  = bPW / correls.length;
+
+    // ── 산점도 SVG 설정 ───────────────────────────────────────────────────
+    const SW = 340, SH = 300;
+    const SP = { top: 28, right: 18, bottom: 58, left: 52 };
+    const sPW = SW - SP.left - SP.right;
+    const sPH = SH - SP.top - SP.bottom;
+    const scX = v => SP.left + (v / 3) * sPW;
+    const scY = v => SP.top  + sPH - (v / 3) * sPH;
+
+    // 추세선 계산
+    let tLine = null;
+    if (selPts.length >= 2) {
+      const n  = selPts.length;
+      const mx = selPts.reduce((s, p) => s + p.x, 0) / n;
+      const my = selPts.reduce((s, p) => s + p.y, 0) / n;
+      const d  = selPts.reduce((s, p) => s + (p.x - mx) ** 2, 0);
+      if (d > 0) {
+        const slope = selPts.reduce((s, p) => s + (p.x - mx) * (p.y - my), 0) / d;
+        tLine = { slope, b: my - slope * mx };
+      }
+    }
+
+    return (
+      <Card className="shadow-sm border-0 mt-2">
+        <Card.Header className="bg-dark text-white fw-bold py-3 d-flex justify-content-between align-items-center">
+          <span>📈 선-후수 교과목 상관계수 분석</span>
+          <Badge bg="light" text="dark" className="fw-normal">
+            성적 입력 과목: {totalSubjectsWithData}개
+          </Badge>
+        </Card.Header>
+
+        <Card.Body>
+          {/* 범례 */}
+          <div className="d-flex gap-2 mb-4 flex-wrap">
+            {[
+              { label: '강한 상관  r ≥ 0.7', hex: '#e74c3c', bg: '#fde8e8' },
+              { label: '중간 상관  r ≥ 0.4', hex: '#e67e22', bg: '#fef3e0' },
+              { label: '약한 상관  r ≥ 0.2', hex: '#2980b9', bg: '#e8f4fd' },
+              { label: '거의 없음  r < 0.2', hex: '#95a5a6', bg: '#f5f5f5' },
+            ].map(b => (
+              <span key={b.label} className="px-2 py-1 rounded small fw-semibold"
+                    style={{ background: b.bg, color: b.hex, border: `1px solid ${b.hex}55` }}>
+                {b.label}
+              </span>
+            ))}
+          </div>
+
+          <Row className="g-4">
+            {/* ── 좌: 상관계수 테이블 ── */}
+            <Col lg={4}>
+              <div className="fw-bold small text-muted mb-2">선-후수 쌍 목록 (행 클릭 → 산점도)</div>
+              <div style={{ maxHeight: 540, overflowY: 'auto' }} className="border rounded shadow-sm">
+                <table className="table table-sm table-hover m-0 align-middle text-center" style={{ fontSize:'0.76rem' }}>
+                  <thead className="table-secondary" style={{ position:'sticky', top:0 }}>
+                    <tr>
+                      <th className="text-start ps-2">선수 → 후수</th>
+                      <th style={{ width:50 }}>r</th>
+                      <th style={{ width:32 }}>n</th>
+                      <th style={{ width:72 }}>해석</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {correls.map((c, i) => {
+                      const ip = interpretR(c.r);
+                      const isSel = i === selectedCorrelIdx;
+                      return (
+                        <tr key={i} onClick={() => setSelectedCorrelIdx(i)}
+                            style={{ cursor:'pointer', background: isSel ? '#f0f7ff' : '', fontWeight: isSel ? 600 : 400 }}>
+                          <td className="text-start ps-2" style={{ lineHeight: 1.3 }}>
+                            <span style={{ color:'#2980b9' }}>{c.pre}</span>
+                            <span className="text-muted"> → </span>
+                            <span>{c.post}</span>
+                          </td>
+                          <td style={{ color: ip.hex, fontWeight: 700 }}>
+                            {c.r !== null ? c.r.toFixed(3) : '—'}
+                          </td>
+                          <td className="text-muted">{c.n}</td>
+                          <td><Badge bg={ip.color} style={{ fontSize:'0.62rem' }}>{ip.label}</Badge></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Col>
+
+            {/* ── 우: 차트 ── */}
+            <Col lg={8}>
+              {/* 막대 차트 */}
+              <div className="mb-3">
+                <div className="fw-bold small text-muted mb-1">전체 쌍 Pearson r (막대 클릭 → 산점도 변경)</div>
+                <div style={{ overflowX:'auto' }}>
+                  <svg width={BW} height={BH} style={{ fontFamily:'sans-serif', display:'block' }}>
+                    {[{ v:0.7, c:'#e74c3c', label:'강한 0.7' }, { v:0.4, c:'#e67e22', label:'중간 0.4' }].map(({ v, c, label }) => (
+                      <g key={v}>
+                        <line x1={BP.left} x2={BP.left+bPW} y1={BP.top+bPH*(1-v)} y2={BP.top+bPH*(1-v)}
+                              stroke={c} strokeDasharray="5,3" strokeWidth={1.5} opacity={0.7} />
+                        <text x={BP.left+bPW+4} y={BP.top+bPH*(1-v)+4} fontSize={9} fill={c}>{label}</text>
+                      </g>
+                    ))}
+                    {correls.map((c, i) => {
+                      const ip  = interpretR(c.r);
+                      const bh  = c.r !== null ? c.r * bPH : 2;
+                      const bx  = BP.left + i * bw;
+                      const by  = BP.top + bPH - bh;
+                      const isSel = i === selectedCorrelIdx;
+                      return (
+                        <g key={i} onClick={() => setSelectedCorrelIdx(i)} style={{ cursor:'pointer' }}>
+                          <rect x={bx+2} y={by} width={bw-4} height={Math.max(2, bh)}
+                                fill={ip.hex} opacity={isSel ? 1 : 0.6}
+                                stroke={isSel ? '#222' : 'none'} strokeWidth={2} rx={2} />
+                          {bh > 14 && c.r !== null && (
+                            <text x={bx+bw/2} y={by-3} textAnchor="middle" fontSize={9} fill={ip.hex} fontWeight="bold">
+                              {c.r.toFixed(2)}
+                            </text>
+                          )}
+                          {c.r === null && (
+                            <text x={bx+bw/2} y={BP.top+bPH-4} textAnchor="middle" fontSize={8} fill="#ccc">—</text>
+                          )}
+                          <text x={bx+bw/2} y={BP.top+bPH+6} textAnchor="end" fontSize={8}
+                                fill={isSel ? '#222' : '#666'} fontWeight={isSel ? 'bold' : 'normal'}
+                                transform={`rotate(-45,${bx+bw/2},${BP.top+bPH+6})`}>
+                            {c.pre.slice(0,4)}→{c.post.slice(0,6)}
+                          </text>
+                        </g>
+                      );
+                    })}
+                    <line x1={BP.left} x2={BP.left} y1={BP.top} y2={BP.top+bPH} stroke="#555" />
+                    <line x1={BP.left} x2={BP.left+bPW} y1={BP.top+bPH} y2={BP.top+bPH} stroke="#555" />
+                    {[0,0.2,0.4,0.6,0.8,1.0].map(v => (
+                      <g key={v}>
+                        <line x1={BP.left-3} x2={BP.left} y1={BP.top+bPH*(1-v)} y2={BP.top+bPH*(1-v)} stroke="#555" />
+                        <text x={BP.left-5} y={BP.top+bPH*(1-v)+4} textAnchor="end" fontSize={9} fill="#555">{v.toFixed(1)}</text>
+                      </g>
+                    ))}
+                    <text x={16} y={BP.top+bPH/2} textAnchor="middle" fontSize={10} fill="#555"
+                          transform={`rotate(-90,16,${BP.top+bPH/2})`}>Pearson r</text>
+                  </svg>
+                </div>
+              </div>
+
+              {/* 산점도 */}
+              <div className="border rounded bg-light p-3">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-bold small">
+                    산점도: <span style={{ color:'#2980b9' }}>{sel?.pre}</span>
+                    <span className="text-muted"> → </span>
+                    <span className="text-dark">{sel?.post}</span>
+                  </span>
+                  <span>
+                    <span className="fw-bold me-1" style={{ color: selInterp.hex, fontSize:'1rem' }}>
+                      r = {selR !== null ? selR.toFixed(3) : 'N/A'}
+                    </span>
+                    <Badge bg={selInterp.color}>{selInterp.label}</Badge>
+                  </span>
+                </div>
+
+                {selPts.length === 0 ? (
+                  <div className="text-center text-muted py-4" style={{ fontSize:'0.85rem' }}>
+                    <div className="mb-1">📂 해당 선수·후수 과목 양쪽의 성적을 모두 입력해야 산점도가 표시됩니다.</div>
+                    <div style={{ fontSize:'0.75rem' }}>✏️ 성적 입력 탭 → {sel?.pre} / {sel?.post} 엑셀 업로드</div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display:'flex', justifyContent:'center' }}>
+                      <svg width={SW} height={SH} style={{ fontFamily:'sans-serif', background:'#fff', borderRadius:6 }}>
+                        {[0,1,2,3].map(v => (
+                          <g key={v}>
+                            <line x1={scX(0)} x2={scX(3)} y1={scY(v)} y2={scY(v)} stroke="#f0f0f0" />
+                            <line x1={scX(v)} x2={scX(v)} y1={scY(0)} y2={scY(3)} stroke="#f0f0f0" />
+                            <text x={scX(v)} y={SP.top+sPH+14} textAnchor="middle" fontSize={10} fill="#aaa">{v}</text>
+                            <text x={SP.left-8} y={scY(v)+4} textAnchor="end" fontSize={10} fill="#aaa">{v}</text>
+                          </g>
+                        ))}
+                        {tLine && (
+                          <line x1={scX(0)} x2={scX(3)}
+                                y1={scY(tLine.b)} y2={scY(tLine.slope*3 + tLine.b)}
+                                stroke="#e74c3c" strokeWidth={2.5} opacity={0.75}
+                                strokeDasharray={selR !== null && Math.abs(selR) >= 0.4 ? 'none' : '5,3'} />
+                        )}
+                        {selPts.map((pt, i) => (
+                          <circle key={i}
+                            cx={scX(pt.x) + ((i*7+3)%9-4)*0.8}
+                            cy={scY(pt.y) + ((i*5+1)%7-3)*0.8}
+                            r={5} fill="#2980b9" opacity={0.55} />
+                        ))}
+                        <line x1={scX(0)} x2={scX(3)} y1={scY(0)} y2={scY(0)} stroke="#555" strokeWidth={1.5} />
+                        <line x1={scX(0)} x2={scX(0)} y1={scY(0)} y2={scY(3)} stroke="#555" strokeWidth={1.5} />
+                        <text x={SP.left+sPW/2} y={SH-5} textAnchor="middle" fontSize={11} fill="#555">{sel?.pre} (점수)</text>
+                        <text x={14} y={SP.top+sPH/2} textAnchor="middle" fontSize={11} fill="#555"
+                              transform={`rotate(-90,14,${SP.top+sPH/2})`}>{sel?.post} (점수)</text>
+                        <text x={scX(3)-4} y={SP.top+14} textAnchor="end" fontSize={9} fill="#999">n = {sel?.n}명</text>
+                      </svg>
+                    </div>
+                    <div className="mt-2 text-center" style={{ fontSize:'0.73rem', color:'#888' }}>
+                      A·B = 3점 &nbsp;|&nbsp; C = 2점 &nbsp;|&nbsp; D = 1점 &nbsp;|&nbsp; F = 0점 &nbsp;|&nbsp; 빨간 선: 추세선
+                    </div>
+                  </>
+                )}
+              </div>
+            </Col>
+          </Row>
+        </Card.Body>
+
+        <Card.Footer className="bg-white text-muted small py-2">
+          💡 Pearson r: −1 ~ +1, 절댓값이 클수록 강한 선형 관계&nbsp;|&nbsp;
+          양쪽 과목 모두 수강한 동일 학번 학생이 3명 이상이어야 계산 가능
         </Card.Footer>
       </Card>
     );
@@ -845,9 +1097,10 @@ const GradePage = ({ yearFilter, onYearChange }) => {
 
       <ul className="nav nav-tabs mb-4">
         {[
-          { key:'input',           label:'✏️ 성적 입력' },
-          { key:'po-table',        label:'📋 PO 성취도 표' },
-          { key:'po-achievement',  label:'📊 PO별 성취도 보고' },
+          { key: 'input',          label: '✏️ 성적 입력' },
+          { key: 'po-table',       label: '📋 PO 성취도 표' },
+          { key: 'po-achievement', label: '📊 PO별 성취도 보고' },
+          { key: 'correlation',    label: '📈 상관계수 분석' },
         ].map(tab => (
           <li className="nav-item" key={tab.key}>
             <button
@@ -861,6 +1114,7 @@ const GradePage = ({ yearFilter, onYearChange }) => {
       {activeTab === 'input'          && renderInputTab()}
       {activeTab === 'po-table'       && renderPoTable()}
       {activeTab === 'po-achievement' && renderPoAchievementTab()}
+      {activeTab === 'correlation'    && renderCorrelationTab()}
     </div>
   );
 };
