@@ -887,17 +887,25 @@ function Survey4({ onSubmit }) {
     { key:"q14", ref:refQ14, check: a => a.q14.trim() !== "" },
   ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const validate = () => {
     const newErrors = {};
     REQUIRED.forEach(({ key, check }) => { if (!check(answers)) newErrors[key] = true; });
     setErrors(newErrors);
     const first = REQUIRED.find(({ key }) => newErrors[key]);
     if (first) {
       first.ref.current?.scrollIntoView({ behavior:"smooth", block:"center" });
-      return;
+      return false;
     }
-    onSubmit(answers);
+    return true;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validate()) onSubmit(answers);
+  };
+
+  const handleSubmitClick = () => {
+    if (validate()) onSubmit(answers);
   };
 
   const errStyle = key => errors[key]
@@ -917,7 +925,7 @@ function Survey4({ onSubmit }) {
   );
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form onSubmit={e => e.preventDefault()}>
       <SurveyHeader
         title="⑤ 교육목표 인지도 설문"
         subtitle="교육 목표 인지도 설문 조사"
@@ -1215,7 +1223,7 @@ function Survey4({ onSubmit }) {
       )}
 
       <div className="d-flex gap-2 justify-content-center my-4">
-        <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
+        <Button type="button" variant="primary" size="lg" className="px-5" onClick={handleSubmitClick}>설문 제출하기</Button>
         <Button type="reset" variant="outline-secondary" onClick={()=>setErrors({})}>초기화</Button>
       </div>
     </Form>
