@@ -3,6 +3,7 @@ import {
   Container, Row, Col, Card, Button, Form,
   ProgressBar, Badge, Alert, Tab, Nav, Table, Spinner
 } from "react-bootstrap";
+import Chart from "chart.js/auto";
 
 // ============================================================
 //  API 설정 — 실제 백엔드 주소로 변경하세요
