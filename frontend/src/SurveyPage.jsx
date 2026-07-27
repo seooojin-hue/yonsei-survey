@@ -863,20 +863,28 @@ function Survey4({ onSubmit }) {
   const refQ3  = useRef(null);
   const refQ5  = useRef(null);
   const refQ6  = useRef(null);
+  const refQ7  = useRef(null);
   const refQ8  = useRef(null);
   const refQ9  = useRef(null);
   const refQ10 = useRef(null);
   const refQ11 = useRef(null);
+  const refQ12 = useRef(null);
+  const refQ13 = useRef(null);
+  const refQ14 = useRef(null);
 
   const REQUIRED = [
     { key:"enrollYear", ref:refEnrollYear, check: a => a.enrollYear.trim() !== "" },
     { key:"q3",  ref:refQ3,  check: a => a.q3  !== "" },
     { key:"q5",  ref:refQ5,  check: a => a.q5  !== "" },
     { key:"q6",  ref:refQ6,  check: a => a.q6  !== "" },
+    { key:"q7",  ref:refQ7,  check: a => a.q7.length > 0 },
     { key:"q8",  ref:refQ8,  check: a => a.q8  !== "" },
     { key:"q9",  ref:refQ9,  check: a => a.q9  !== "" },
     { key:"q10", ref:refQ10, check: a => a.q10 !== "" },
     { key:"q11", ref:refQ11, check: a => a.q11 !== "" },
+    { key:"q12", ref:refQ12, check: a => a.q12.length > 0 },
+    { key:"q13", ref:refQ13, check: a => CAREERS_S4.every(c => a.q13[c] !== 0) },
+    { key:"q14", ref:refQ14, check: a => a.q14.trim() !== "" },
   ];
 
   const handleSubmit = (e) => {
@@ -1034,17 +1042,21 @@ function Survey4({ onSubmit }) {
         </Card.Body>
       </Card>
 
-      <Card className="mb-3 shadow-sm border-0">
+      <Card className="mb-3 shadow-sm border-0" ref={refQ7}>
         <Card.Body>
-          <Form.Label className="fw-semibold">7. 어떤 방법(학과 행사, 게시판 등)으로 교육 목표 및 인증교육과정을 알게 되었습니까?</Form.Label>
-          <p className="text-muted small mb-1">해당 사항에 모두 표시하세요</p>
-          <Row xs={2} md={3} className="g-2 mt-1">
-            {Q7_OPTIONS.map(v=>(
-              <Col key={v}>
-                <Form.Check type="checkbox" label={v} checked={answers.q7.includes(v)} onChange={()=>toggle("q7",v)} />
-              </Col>
-            ))}
-          </Row>
+          <div style={errStyle("q7")}>
+            <Form.Label className="fw-semibold">7. 어떤 방법(학과 행사, 게시판 등)으로 교육 목표 및 인증교육과정을 알게 되었습니까?</Form.Label>
+            <p className="text-muted small mb-1">해당 사항에 모두 표시하세요</p>
+            <Row xs={2} md={3} className="g-2 mt-1">
+              {Q7_OPTIONS.map(v=>(
+                <Col key={v}>
+                  <Form.Check type="checkbox" label={v} checked={answers.q7.includes(v)}
+                    onChange={()=>{ toggle("q7",v); setErrors(p=>({...p,q7:false})); }} />
+                </Col>
+              ))}
+            </Row>
+            {errMsg("q7")}
+          </div>
           {answers.q7.includes("기타") && (
             <Form.Control size="sm" className="mt-2" placeholder="기타 방법 기재" value={answers.q7other} onChange={e=>set("q7other",e.target.value)} />
           )}
@@ -1133,54 +1145,66 @@ function Survey4({ onSubmit }) {
         </Card.Body>
       </Card>
 
-      <Card className="mb-3 shadow-sm border-0">
+      <Card className="mb-3 shadow-sm border-0" ref={refQ12}>
         <Card.Body>
-          <Form.Label className="fw-semibold">12. 졸업 전·후 취득하고자 하는 국가면허 및 자격증은? (대상에 모두 체크해주시기 바랍니다.)</Form.Label>
-          <p className="text-muted small mb-1">* 기타 : 본인이 취득하고자 하는 것을 기재하세요(예, 전산회계 등)</p>
-          <Row xs={2} md={3} className="g-2 mt-1">
-            {CERTS_S4.map(v=>(
-              <Col key={v}>
-                <Form.Check type="checkbox" label={v} checked={answers.q12.includes(v)} onChange={()=>toggle("q12",v)} />
-              </Col>
-            ))}
-          </Row>
+          <div style={errStyle("q12")}>
+            <Form.Label className="fw-semibold">12. 졸업 전·후 취득하고자 하는 국가면허 및 자격증은? (대상에 모두 체크해주시기 바랍니다.)</Form.Label>
+            <p className="text-muted small mb-1">* 기타 : 본인이 취득하고자 하는 것을 기재하세요(예, 전산회계 등)</p>
+            <Row xs={2} md={3} className="g-2 mt-1">
+              {CERTS_S4.map(v=>(
+                <Col key={v}>
+                  <Form.Check type="checkbox" label={v} checked={answers.q12.includes(v)}
+                    onChange={()=>{ toggle("q12",v); setErrors(p=>({...p,q12:false})); }} />
+                </Col>
+              ))}
+            </Row>
+            {errMsg("q12")}
+          </div>
           {answers.q12.includes("기타") && (
             <Form.Control size="sm" className="mt-2" placeholder="기타 자격증 기재" value={answers.q12other} onChange={e=>set("q12other",e.target.value)} />
           )}
         </Card.Body>
       </Card>
 
-      <Card className="mb-3 shadow-sm border-0">
+      <Card className="mb-3 shadow-sm border-0" ref={refQ13}>
         <Card.Body>
-          <Form.Label className="fw-semibold">13. 졸업 후 희망하는 진로는 무엇입니까? (1부터 5까지 순서로 적어주세요)</Form.Label>
-          <p className="text-muted small mb-1">행당 한 개의 타원형만 표시합니다</p>
-          <div className="table-responsive mt-2">
-            <Table bordered size="sm" style={{fontSize:12}}>
-              <thead className="table-primary">
-                <tr><th>진로</th>{[1,2,3,4,5].map(n=><th key={n} className="text-center">{n}</th>)}</tr>
-              </thead>
-              <tbody>
-                {CAREERS_S4.map(c=>(
-                  <tr key={c}>
-                    <td style={{minWidth:140}}>{c}</td>
-                    {[1,2,3,4,5].map(n=>(
-                      <td key={n} className="text-center">
-                        <Form.Check type="radio" name={`s4q13_${c}`} value={n}
-                          checked={answers.q13[c]===n} onChange={()=>set("q13",{...answers.q13,[c]:n})} />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+          <div style={errStyle("q13")}>
+            <Form.Label className="fw-semibold">13. 졸업 후 희망하는 진로는 무엇입니까? (1부터 5까지 순서로 적어주세요)</Form.Label>
+            <p className="text-muted small mb-1">행당 한 개의 타원형만 표시합니다</p>
+            <div className="table-responsive mt-2">
+              <Table bordered size="sm" style={{fontSize:12}}>
+                <thead className="table-primary">
+                  <tr><th>진로</th>{[1,2,3,4,5].map(n=><th key={n} className="text-center">{n}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {CAREERS_S4.map(c=>(
+                    <tr key={c}>
+                      <td style={{minWidth:140}}>{c}</td>
+                      {[1,2,3,4,5].map(n=>(
+                        <td key={n} className="text-center">
+                          <Form.Check type="radio" name={`s4q13_${c}`} value={n}
+                            checked={answers.q13[c]===n}
+                            onChange={()=>{ set("q13",{...answers.q13,[c]:n}); setErrors(p=>({...p,q13:false})); }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+            {errMsg("q13")}
           </div>
         </Card.Body>
       </Card>
 
-      <Card className="mb-3 shadow-sm border-0">
+      <Card className="mb-3 shadow-sm border-0" ref={refQ14}>
         <Card.Body>
-          <Form.Label className="fw-semibold">14. 취업 또는 학습 과목 관련하여 질문, 제안이 있으면 자유롭게 기술해주세요</Form.Label>
-          <Form.Control as="textarea" rows={4} value={answers.q14} onChange={e=>set("q14",e.target.value)} />
+          <div style={errStyle("q14")}>
+            <Form.Label className="fw-semibold">14. 취업 또는 학습 과목 관련하여 질문, 제안이 있으면 자유롭게 기술해주세요</Form.Label>
+            <Form.Control as="textarea" rows={4} value={answers.q14}
+              onChange={e=>{ set("q14",e.target.value); setErrors(p=>({...p,q14:false})); }} />
+            {errMsg("q14")}
+          </div>
         </Card.Body>
       </Card>
 
