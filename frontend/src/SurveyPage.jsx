@@ -220,7 +220,10 @@ function BarChart({ id, labels, data, color = "rgba(13,110,253,0.75)" }) {
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    if (chartRef.current) chartRef.current.destroy();
+    // 캔버스에 이미 붙어있는 차트 인스턴스 제거 (weakSubs 오류 방지)
+    const existing = Chart.getChart(canvasRef.current);
+    if (existing) existing.destroy();
+    if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
     const short = labels.map((l) => (l.length > 28 ? l.slice(0, 28) + "…" : l));
     chartRef.current = new Chart(canvasRef.current, {
       type: "bar",
@@ -238,7 +241,10 @@ function BarChart({ id, labels, data, color = "rgba(13,110,253,0.75)" }) {
         plugins: { legend: { display: false } },
       },
     });
-    return () => chartRef.current?.destroy();
+    return () => {
+      chartRef.current?.destroy();
+      chartRef.current = null;
+    };
   }, [labels, data, color]);
 
   const h = Math.max(200, labels.length * 32);
