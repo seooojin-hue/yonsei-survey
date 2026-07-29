@@ -3,7 +3,6 @@ import {
   Container, Row, Col, Card, Button, Form,
   ProgressBar, Badge, Alert, Tab, Nav, Table, Spinner
 } from "react-bootstrap";
-import Chart from "chart.js/auto";
 
 // ============================================================
 //  API 설정 — 실제 백엔드 주소로 변경하세요
@@ -213,42 +212,48 @@ function LikertTable({ questions, prefix, answers, onChange, labels = LIKERT_LAB
   );
 }
 
-/** 결과 막대 그래프 (Chart.js) */
+/** 결과 막대 그래프 (SVG — Chart.js 없이) */
 function BarChart({ id, labels, data, color = "rgba(13,110,253,0.75)" }) {
-  const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+  const maxVal = 5;
+  const rowH = 32;
+  const labelW = 220;
+  const barMaxW = 300;
+  const padY = 8;
+  const height = labels.length * rowH + padY * 2;
 
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    // 캔버스에 이미 붙어있는 차트 인스턴스 제거 (weakSubs 오류 방지)
-    const existing = Chart.getChart(canvasRef.current);
-    if (existing) existing.destroy();
-    if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
-    const short = labels.map((l) => (l.length > 28 ? l.slice(0, 28) + "…" : l));
-    chartRef.current = new Chart(canvasRef.current, {
-      type: "bar",
-      data: {
-        labels: short,
-        datasets: [{ label: "평균 점수", data, backgroundColor: color, borderRadius: 4 }],
-      },
-      options: {
-        indexAxis: "y",
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { min: 0, max: 5, title: { display: true, text: "점수 (1~5)" } },
-        },
-        plugins: { legend: { display: false } },
-      },
-    });
-    return () => {
-      chartRef.current?.destroy();
-      chartRef.current = null;
-    };
-  }, [labels, data, color]);
-
-  const h = Math.max(200, labels.length * 32);
-  return <canvas ref={canvasRef} style={{ height: h }} />;
+  return (
+    <svg width="100%" viewBox={`0 0 ${labelW + barMaxW + 60} ${height}`}
+      style={{ display: "block", fontFamily: "sans-serif", fontSize: 12 }}>
+      {labels.map((label, i) => {
+        const val = data[i] ?? 0;
+        const barW = (val / maxVal) * barMaxW;
+        const y = padY + i * rowH;
+        const short = label.length > 24 ? label.slice(0, 24) + "…" : label;
+        return (
+          <g key={i}>
+            <text x={labelW - 6} y={y + rowH / 2 + 4} textAnchor="end" fill="#333" fontSize={11}>
+              {short}
+            </text>
+            <rect x={labelW} y={y + 6} width={Math.max(barW, 2)} height={rowH - 12}
+              fill={color} rx={3} />
+            <text x={labelW + barW + 5} y={y + rowH / 2 + 4} fill="#555" fontSize={11}>
+              {val > 0 ? val.toFixed(2) : "-"}
+            </text>
+          </g>
+        );
+      })}
+      <line x1={labelW} y1={padY} x2={labelW} y2={height - padY} stroke="#ccc" />
+      {[0, 1, 2, 3, 4, 5].map(v => (
+        <g key={v}>
+          <line x1={labelW + (v / maxVal) * barMaxW} y1={padY}
+            x2={labelW + (v / maxVal) * barMaxW} y2={height - padY}
+            stroke="#eee" strokeDasharray="3,3" />
+          <text x={labelW + (v / maxVal) * barMaxW} y={height - 1}
+            textAnchor="middle" fill="#999" fontSize={10}>{v}</text>
+        </g>
+      ))}
+    </svg>
+  );
 }
 
 /** 결과 요약 테이블 */
