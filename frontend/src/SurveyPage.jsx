@@ -648,11 +648,15 @@ function Survey1({ onSubmit }) {
 
 function Results1({ responses }) {
   const careers = ["보건의료정보부서","보건교육","병원행정부서","공무원","보험회사"];
+  const parseObj = (v) => typeof v === "string" ? JSON.parse(v || "{}") : (v || {});
   const careerCounts = careers.map(c =>
-    responses.filter(r => r.career[c] === "1").length
+    responses.filter(r => parseObj(r.career)[c] === "1").length
   );
   const weakCount = {};
-  responses.forEach(r => r.weakSubs.forEach(s => { weakCount[s] = (weakCount[s]||0)+1; }));
+  responses.forEach(r => {
+    const subs = typeof r.weakSubs === "string" ? JSON.parse(r.weakSubs || "[]") : (r.weakSubs || []);
+    subs.forEach(s => { weakCount[s] = (weakCount[s]||0)+1; });
+  });
   const sortedWeak = Object.entries(weakCount).sort((a,b)=>b[1]-a[1]);
 
   return (
@@ -1315,8 +1319,9 @@ function Results4({ responses }) {
   const q3 = yesNo("q3"); const q5 = yesNo("q5"); const q6 = yesNo("q6");
   const q8 = yesNo("q8"); const q11 = yesNo("q11"); const q10 = yn3("q10");
   const q9counts = ["전혀 아니다","아니다","보통이다","그렇다","매우 그렇다"].map(v=>responses.filter(r=>r.q9===v).length);
-  const certCounts = CERTS_S4.map(c=>responses.filter(r=>r.q12.includes(c)).length);
-  const q7counts = Q7_OPTIONS.map(v=>responses.filter(r=>r.q7.includes(v)).length);
+  const parseArr = (v) => typeof v === "string" ? JSON.parse(v || "[]") : (v || []);
+  const certCounts = CERTS_S4.map(c=>responses.filter(r=>parseArr(r.q12).includes(c)).length);
+  const q7counts = Q7_OPTIONS.map(v=>responses.filter(r=>parseArr(r.q7).includes(v)).length);
   return (
     <>
       <h6 className="border-start border-primary border-4 ps-2 mb-3">인지도 현황 (예/아니오)</h6>
@@ -1425,7 +1430,10 @@ function Survey5({ onSubmit }) {
 }
 
 function Results5({ responses }) {
-  const counts = EXAM_SUBJECTS.map(s => responses.filter(r => r.weakSubs.includes(s)).length);
+  const counts = EXAM_SUBJECTS.map(s => responses.filter(r => {
+    const subs = typeof r.weakSubs === "string" ? JSON.parse(r.weakSubs || "[]") : (r.weakSubs || []);
+    return subs.includes(s);
+  }).length);
   return (
     <>
       <h6 className="border-start border-danger border-4 ps-2 mb-3">취약 과목 선택 분포</h6>
