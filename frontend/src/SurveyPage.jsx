@@ -600,6 +600,18 @@ function Survey1({ onSubmit }) {
             ▪ <strong>학습성취</strong>: 현재까지 수강한 교과목 중 본인이 생각하기에 취약한 교과목에 √ 표시를 해주시기 바랍니다(하나 이상).<br/>
             ▪ <strong>학습 요구도</strong>: 교육의 적절성에 대한 질문입니다. 본인이 생각하는 각 교과목에 대한 적절성에 해당 되는 번호에 √ 표시를 해주시기 바랍니다.
           </Alert>
+          <div className="d-flex justify-content-end mb-2">
+            <Button size="sm" variant="outline-success"
+              onClick={() => {
+                const all = {};
+                SUBJECTS.forEach((_, si) => {
+                  [0,1,2,3].forEach(ci => { all[`${si}_${ci}`] = "5"; });
+                });
+                set("subRatings", { ...answers.subRatings, ...all });
+              }}>
+              ⑤ 전체 매우높음 선택
+            </Button>
+          </div>
           <div className="table-responsive">
             <Table bordered hover size="sm" style={{ minWidth: 640, fontSize: 12 }}>
               <thead className="table-primary">
