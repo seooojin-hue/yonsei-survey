@@ -855,14 +855,9 @@ function Survey2({ onSubmit }) {
   );
 }
 
-/** ③ 산업체 설문 — 응답자별 개별 결과 */
-function Results2({ responses }) {
+/** 응답자별 개별 결과 (③산업체 / ④졸업생 공용) */
+function IndividualResults({ responses, sections }) {
   const SCORE = ["①","②","③","④","⑤"];
-  const sections = [
-    { label: "Ⅰ. 교육과정 및 운영", prefix: "s2q1", questions: s23_q1, color: "#0d6efd" },
-    { label: "Ⅱ. 산업체 만족도",    prefix: "s2q2", questions: s2_q2,  color: "#ffc107" },
-    { label: "Ⅲ. 학습성과",         prefix: "s2q3", questions: s23_q3, color: "#6610f2" },
-  ];
 
   if (responses.length === 0) return (
     <div className="text-center text-muted py-5">
@@ -1728,8 +1723,16 @@ function Results6({ responses }) {
 function SurveyResults({ idx, responses }) {
   if (idx === 0) return <Results0 responses={responses} />;
   if (idx === 1) return <Results1 responses={responses} />;
-  if (idx === 2) return <Results2 responses={responses} />;
-  if (idx === 3) return <Results23 responses={responses} q2items={s3_q2} title="s3" />;
+  if (idx === 2) return <IndividualResults responses={responses} sections={[
+    { label: "Ⅰ. 교육과정 및 운영", prefix: "s2q1", questions: s23_q1, color: "#0d6efd" },
+    { label: "Ⅱ. 산업체 만족도",    prefix: "s2q2", questions: s2_q2,  color: "#ffc107" },
+    { label: "Ⅲ. 학습성과",         prefix: "s2q3", questions: s23_q3, color: "#6610f2" },
+  ]} />;
+  if (idx === 3) return <IndividualResults responses={responses} sections={[
+    { label: "Ⅰ. 교육과정 및 운영", prefix: "s3q1", questions: s23_q1, color: "#0d6efd" },
+    { label: "Ⅱ. 졸업생 만족도",    prefix: "s3q2", questions: s3_q2,  color: "#ffc107" },
+    { label: "Ⅲ. 학습성과",         prefix: "s3q3", questions: s23_q3, color: "#6610f2" },
+  ]} />;
   if (idx === 4) return <Results4 responses={responses} />;
   if (idx === 5) return <Results5 responses={responses} />;
   if (idx === 6) return <Results6 responses={responses} />;
