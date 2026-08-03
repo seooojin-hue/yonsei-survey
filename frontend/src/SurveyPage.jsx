@@ -1699,24 +1699,29 @@ function Survey5({ onSubmit }) {
 }
 
 function Results5({ responses }) {
-  const counts = EXAM_SUBJECTS.map(s => responses.filter(r => {
-    const subs = typeof r.weakSubs === "string" ? JSON.parse(r.weakSubs || "[]") : (r.weakSubs || []);
-    return subs.includes(s);
-  }).length);
+  const parseArr = (v) => typeof v === "string" ? JSON.parse(v || "[]") : (v || []);
+  const counts = EXAM_SUBJECTS.map(s => responses.filter(r => parseArr(r.weakSubs).includes(s)).length);
+  const comments = responses.filter(r => r.comment && r.comment.trim()).map(r => r.comment.trim());
+  const weakOthers = responses.filter(r => r.weakOther && r.weakOther.trim()).map(r => r.weakOther.trim());
   return (
     <>
       <h6 className="border-start border-danger border-4 ps-2 mb-3">취약 과목 선택 분포</h6>
-      <div style={{ height: Math.max(200, EXAM_SUBJECTS.length * 34) }}>
-        <BarChart id="c5-1" labels={EXAM_SUBJECTS} data={counts} color="rgba(220,53,69,0.7)" />
-      </div>
-      <Table striped bordered size="sm" className="mt-3">
+      <BarChart id="c5-1" labels={EXAM_SUBJECTS} data={counts} color="rgba(220,53,69,0.7)" />
+      <Table striped bordered size="sm" className="mt-3 mb-4">
         <thead className="table-danger"><tr><th>교과목</th><th>선택 수</th></tr></thead>
         <tbody>
           {EXAM_SUBJECTS.map((s,i)=>counts[i]>0&&(
             <tr key={s}><td>{s}</td><td className="fw-bold text-danger">{counts[i]}명</td></tr>
           ))}
+          {weakOthers.length > 0 && <tr><td colSpan={2}><small className="text-muted">기타: {weakOthers.join(" / ")}</small></td></tr>}
         </tbody>
       </Table>
+      {comments.length > 0 && <>
+        <h6 className="border-start border-secondary border-4 ps-2 mb-3">건의사항</h6>
+        <ul className="list-group">
+          {comments.map((t,i)=><li key={i} className="list-group-item py-1 small">{i+1}. {t}</li>)}
+        </ul>
+      </>}
     </>
   );
 }
@@ -1798,13 +1803,18 @@ function Survey6({ onSubmit }) {
 
 function Results6({ responses }) {
   const a1 = getAvg(responses, "s6q1", s6_q1.length);
+  const comments = responses.filter(r => r.comment && r.comment.trim()).map(r => r.comment.trim());
   return (
     <>
       <h6 className="border-start border-primary border-4 ps-2 mb-3">국시 지원 프로그램 만족도 평균 점수</h6>
-      <div style={{ height: Math.max(200, s6_q1.length * 38) }}>
-        <BarChart id="c6-1" labels={s6_q1} data={a1} color="rgba(13,110,253,0.7)" />
-      </div>
+      <BarChart id="c6-1" labels={s6_q1} data={a1} color="rgba(13,110,253,0.7)" />
       <ResultsTable labels={s6_q1} avgs={a1} />
+      {comments.length > 0 && <>
+        <h6 className="border-start border-secondary border-4 ps-2 mt-4 mb-3">건의사항</h6>
+        <ul className="list-group">
+          {comments.map((t,i)=><li key={i} className="list-group-item py-1 small">{i+1}. {t}</li>)}
+        </ul>
+      </>}
     </>
   );
 }
