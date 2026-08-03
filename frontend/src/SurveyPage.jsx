@@ -1201,13 +1201,13 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ3}>
         <Card.Body>
           <div style={errStyle("q3")}>
-            <Form.Label className="fw-semibold">3. 입학 전에 보건의료정보관리사(구, 의무기록사)에 대하여 알고 있었습니까?</Form.Label>
+            <Form.Label className="fw-semibold">2. 입학 전에 보건의료정보관리사(구, 의무기록사)에 대하여 알고 있었습니까?</Form.Label>
             <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
             <YN name="s4q3" val={answers.q3} onChange={v=>{ set("q3",v); setErrors(p=>({...p,q3:false})); }} />
             {errMsg("q3")}
           </div>
           <div className="mt-3">
-            <Form.Label className="fw-semibold">4. * 알고 있었다면 정보를 취득한 계기나 경로를 적어주시오.</Form.Label>
+            <Form.Label className="fw-semibold">3. * 알고 있었다면 정보를 취득한 계기나 경로를 적어주시오.</Form.Label>
             <Form.Control as="textarea" rows={3} value={answers.q4} onChange={e=>set("q4",e.target.value)} />
           </div>
         </Card.Body>
@@ -1216,7 +1216,7 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ5}>
         <Card.Body>
           <div style={errStyle("q5")}>
-            <Form.Label className="fw-semibold">5. {UNIV}와 AI보건정보관리학과, 교육 목적과 보건의료정보관리교육 프로그램 목적이 있습니다. 보건의료정보관리교육 프로그램의 목적에 대해서 잘 알고 계십니까?</Form.Label>
+            <Form.Label className="fw-semibold">4. {UNIV}와 AI보건정보관리학과, 교육 목적과 보건의료정보관리교육 프로그램 목적이 있습니다. 보건의료정보관리교육 프로그램의 목적에 대해서 잘 알고 계십니까?</Form.Label>
             <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
             <YN name="s4q5" val={answers.q5} onChange={v=>{ set("q5",v); setErrors(p=>({...p,q5:false})); }} />
             {errMsg("q5")}
@@ -1226,7 +1226,7 @@ function Survey4({ onSubmit }) {
 
       <Card className="mb-3 shadow-sm border-0">
         <Card.Body>
-          <Form.Label className="fw-semibold">6. 아래 그림은 보건의료정보관리프로그램을 이수하면 달성하게 되는 최종 성과입니다. 이에 대해 알고 있습니까?</Form.Label>
+          <Form.Label className="fw-semibold">5. 아래 그림은 보건의료정보관리프로그램을 이수하면 달성하게 되는 최종 성과입니다. 이에 대해 알고 있습니까?</Form.Label>
           <div className="my-3 p-2 border rounded" style={{fontSize:11, background:"#f8f9fa"}}>
             <div className="text-center fw-bold mb-2" style={{fontSize:13}}>보건의료정보관리교육 인증 프로그램의 최종 성과(PO)</div>
             <Table bordered size="sm" style={{fontSize:10}}>
@@ -1304,7 +1304,7 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ7}>
         <Card.Body>
           <div style={errStyle("q7")}>
-            <Form.Label className="fw-semibold">7. 어떤 방법(학과 행사, 게시판 등)으로 교육 목표 및 인증교육과정을 알게 되었습니까?</Form.Label>
+            <Form.Label className="fw-semibold">6. 어떤 방법(학과 행사, 게시판 등)으로 교육 목표 및 인증교육과정을 알게 되었습니까?</Form.Label>
             <p className="text-muted small mb-1">해당 사항에 모두 표시하세요</p>
             <Row xs={2} md={3} className="g-2 mt-1">
               {Q7_OPTIONS.map(v=>(
@@ -1325,7 +1325,7 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ8}>
         <Card.Body>
           <div style={errStyle("q8")}>
-            <Form.Label className="fw-semibold">8. 현재 보건의료정보관리사 교육프로그램과 프로그램 최종성과(Program Output)가 홈페이지와 인터넷 포털에 공지되어 있다는 것을 알고 있습니까?</Form.Label>
+            <Form.Label className="fw-semibold">7. 현재 보건의료정보관리사 교육프로그램과 프로그램 최종성과(Program Output)가 홈페이지와 인터넷 포털에 공지되어 있다는 것을 알고 있습니까?</Form.Label>
             <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
             <YN name="s4q8" val={answers.q8} onChange={v=>{ set("q8",v); setErrors(p=>({...p,q8:false})); }} />
             {errMsg("q8")}
@@ -1336,7 +1336,7 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ9}>
         <Card.Body>
           <div style={errStyle("q9")}>
-            <Form.Label className="fw-semibold">9. 학기 초 이루어진 보건의료정보관리사 인증제도의 교육프로그램의 프로그램 이수 교과과정과 최종성과(Program Output)에 대한 강의는 본인의 진로 설계에 도움이 되었습니까?</Form.Label>
+            <Form.Label className="fw-semibold">8. 학기 초 이루어진 보건의료정보관리사 인증제도의 교육프로그램의 프로그램 이수 교과과정과 최종성과(Program Output)에 대한 강의는 본인의 진로 설계에 도움이 되었습니까?</Form.Label>
             <p className="text-muted small mb-1">한 개의 타원형만 표시합니다.</p>
             <div className="d-flex gap-3 flex-wrap mt-2">
               {["전혀 아니다","아니다","보통이다","그렇다","매우 그렇다"].map(v=>(
@@ -1351,7 +1351,7 @@ function Survey4({ onSubmit }) {
 
       <Card className="mb-3 shadow-sm border-0">
         <Card.Body>
-          <Form.Label className="fw-semibold">10. 보건의료정보관리프로그램을 국가 고시를 응시하기 위해서는 프로그램에서 제공되는 아래 18개의 필수 과목을 반드시 이수해야 함을 알고 있습니까?</Form.Label>
+          <Form.Label className="fw-semibold">9. 보건의료정보관리프로그램을 국가 고시를 응시하기 위해서는 프로그램에서 제공되는 아래 18개의 필수 과목을 반드시 이수해야 함을 알고 있습니까?</Form.Label>
           <div className="table-responsive my-3">
             <Table bordered size="sm" style={{fontSize:12}}>
               <thead className="table-primary"><tr><th>#</th><th>교과목</th><th>학점</th><th>비고</th></tr></thead>
@@ -1380,7 +1380,7 @@ function Survey4({ onSubmit }) {
 
       <Card className="mb-3 shadow-sm border-0">
         <Card.Body>
-          <Form.Label className="fw-semibold">11. 보건의료정보관리프로그램에는 선, 후수 지정 교과목이 있습니다. 이는 선수과목 수강 후 후수과목을 수강해야 하는 것을 의미합니다. 이에 대하여 알고 있습니까?</Form.Label>
+          <Form.Label className="fw-semibold">10. 보건의료정보관리프로그램에는 선, 후수 지정 교과목이 있습니다. 이는 선수과목 수강 후 후수과목을 수강해야 하는 것을 의미합니다. 이에 대하여 알고 있습니까?</Form.Label>
           <div className="table-responsive my-3">
             <Table bordered size="sm" style={{fontSize:11}}>
               <thead className="table-primary">
@@ -1407,7 +1407,7 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ12}>
         <Card.Body>
           <div style={errStyle("q12")}>
-            <Form.Label className="fw-semibold">12. 졸업 전·후 취득하고자 하는 국가면허 및 자격증은? (대상에 모두 체크해주시기 바랍니다.)</Form.Label>
+            <Form.Label className="fw-semibold">11. 졸업 전·후 취득하고자 하는 국가면허 및 자격증은? (대상에 모두 체크해주시기 바랍니다.)</Form.Label>
             <p className="text-muted small mb-1">* 기타 : 본인이 취득하고자 하는 것을 기재하세요(예, 전산회계 등)</p>
             <Row xs={2} md={3} className="g-2 mt-1">
               {CERTS_S4.map(v=>(
@@ -1428,7 +1428,7 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ13}>
         <Card.Body>
           <div style={errStyle("q13")}>
-            <Form.Label className="fw-semibold">13. 졸업 후 희망하는 진로는 무엇입니까? (1부터 5까지 순서로 적어주세요)</Form.Label>
+            <Form.Label className="fw-semibold">12. 졸업 후 희망하는 진로는 무엇입니까? (1부터 5까지 순서로 적어주세요)</Form.Label>
             <p className="text-muted small mb-1">행당 한 개의 타원형만 표시합니다</p>
             <div className="table-responsive mt-2">
               <Table bordered size="sm" style={{fontSize:12}}>
@@ -1459,7 +1459,7 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ14}>
         <Card.Body>
           <div style={errStyle("q14")}>
-            <Form.Label className="fw-semibold">14. 취업 또는 학습 과목 관련하여 질문, 제안이 있으면 자유롭게 기술해주세요</Form.Label>
+            <Form.Label className="fw-semibold">13. 취업 또는 학습 과목 관련하여 질문, 제안이 있으면 자유롭게 기술해주세요</Form.Label>
             <Form.Control as="textarea" rows={4} value={answers.q14}
               onChange={e=>{ set("q14",e.target.value); setErrors(p=>({...p,q14:false})); }} />
             {errMsg("q14")}
@@ -1482,10 +1482,12 @@ function Survey4({ onSubmit }) {
 }
 
 function Results4({ responses }) {
+  const parseArr = (v) => typeof v === "string" ? JSON.parse(v || "[]") : (v || []);
+  const parseObj = (v) => typeof v === "string" ? JSON.parse(v || "{}") : (v || {});
   const yesNo = (key) => {
     const yes = responses.filter(r=>r[key]==="예").length;
     const no = responses.filter(r=>r[key]==="아니오").length;
-    return { yes, no, total: responses.length };
+    return { yes, no };
   };
   const yn3 = (key) => {
     const yes = responses.filter(r=>r[key]==="예").length;
@@ -1493,39 +1495,129 @@ function Results4({ responses }) {
     const etc = responses.filter(r=>r[key]==="기타").length;
     return { yes, no, etc };
   };
+
   const q3 = yesNo("q3"); const q5 = yesNo("q5"); const q6 = yesNo("q6");
   const q8 = yesNo("q8"); const q11 = yesNo("q11"); const q10 = yn3("q10");
   const q9counts = ["전혀 아니다","아니다","보통이다","그렇다","매우 그렇다"].map(v=>responses.filter(r=>r.q9===v).length);
-  const parseArr = (v) => typeof v === "string" ? JSON.parse(v || "[]") : (v || []);
   const certCounts = CERTS_S4.map(c=>responses.filter(r=>parseArr(r.q12).includes(c)).length);
   const q7counts = Q7_OPTIONS.map(v=>responses.filter(r=>parseArr(r.q7).includes(v)).length);
+
+  // 입학년도 분포
+  const yearCounts = {};
+  responses.forEach(r => { if (r.enrollYear) yearCounts[r.enrollYear] = (yearCounts[r.enrollYear]||0)+1; });
+  const years = Object.keys(yearCounts).sort();
+
+  // Q12. 진로 희망 순위 집계
+  const careerRanks = {};
+  CAREERS_S4.forEach(c => { careerRanks[c] = {1:0,2:0,3:0,4:0,5:0}; });
+  responses.forEach(r => {
+    const obj = parseObj(r.q13);
+    CAREERS_S4.forEach(c => { const n = Number(obj[c]); if (n>=1 && n<=5) careerRanks[c][n]++; });
+  });
+
+  // 주관식 텍스트 수집
+  const q4texts = responses.filter(r=>r.q3==="예" && r.q4 && r.q4.trim()).map(r=>r.q4.trim());
+  const q7others = responses.filter(r=>parseArr(r.q7).includes("기타") && r.q7other && r.q7other.trim()).map(r=>r.q7other.trim());
+  const q10others = responses.filter(r=>r.q10==="기타" && r.q10other && r.q10other.trim()).map(r=>r.q10other.trim());
+  const q12others = responses.filter(r=>parseArr(r.q12).includes("기타") && r.q12other && r.q12other.trim()).map(r=>r.q12other.trim());
+  const q14texts = responses.filter(r=>r.q14 && r.q14.trim()).map(r=>r.q14.trim());
+
   return (
     <>
+      {/* 입학년도 */}
+      {years.length > 0 && <>
+        <h6 className="border-start border-info border-4 ps-2 mb-3">입학년도 분포</h6>
+        <Table bordered size="sm" className="mb-4">
+          <thead className="table-info"><tr><th>입학년도</th>{years.map(y=><th key={y}>{y}</th>)}</tr></thead>
+          <tbody><tr><td>응답 수</td>{years.map(y=><td key={y}>{yearCounts[y]}명</td>)}</tr></tbody>
+        </Table>
+      </>}
+
+      {/* 인지도 예/아니오 */}
       <h6 className="border-start border-primary border-4 ps-2 mb-3">인지도 현황 (예/아니오)</h6>
-      <Table bordered size="sm">
+      <Table bordered size="sm" className="mb-4">
         <thead className="table-primary"><tr><th>문항</th><th>예</th><th>아니오</th></tr></thead>
         <tbody>
           {[
-            ["Q3. 입학 전 보건의료정보관리사 인지", q3],
-            ["Q5. 교육프로그램 목적 인지", q5],
-            ["Q6. 최종 성과(PO) 인지", q6],
-            ["Q8. 홈페이지 공지 인지", q8],
-            ["Q11. 선후수 교과목 인지", q11],
+            ["Q2. 입학 전 보건의료정보관리사 인지", q3],
+            ["Q4. 교육프로그램 목적 인지", q5],
+            ["Q5. 최종 성과(PO) 인지", q6],
+            ["Q7. 홈페이지 공지 인지", q8],
+            ["Q10. 선후수 교과목 인지", q11],
           ].map(([label,d])=>(
             <tr key={label}><td>{label}</td><td>{d.yes}명</td><td>{d.no}명</td></tr>
           ))}
         </tbody>
       </Table>
-      <h6 className="border-start border-warning border-4 ps-2 mt-4 mb-3">Q9. 강의의 진로 설계 도움도</h6>
-      <Table bordered size="sm">
-        <thead className="table-warning"><tr>{["전혀 아니다","아니다","보통이다","그렇다","매우 그렇다"].map(v=><th key={v}>{v}</th>)}</tr></thead>
+
+      {/* Q3. 정보 취득 계기/경로 (자유응답) */}
+      {q4texts.length > 0 && <>
+        <h6 className="border-start border-secondary border-4 ps-2 mb-3">Q3. 정보 취득 계기/경로 (자유응답)</h6>
+        <ul className="list-group mb-4">
+          {q4texts.map((t,i)=><li key={i} className="list-group-item py-1 small">{i+1}. {t}</li>)}
+        </ul>
+      </>}
+
+      {/* Q6. 교육목표 인지 방법 */}
+      <h6 className="border-start border-warning border-4 ps-2 mb-3">Q6. 교육목표 인지 방법</h6>
+      <Table bordered size="sm" className="mb-2">
+        <thead className="table-warning"><tr><th>방법</th><th>선택 수</th></tr></thead>
+        <tbody>
+          {Q7_OPTIONS.map((v,i)=>(
+            <tr key={v}><td>{v}</td><td>{q7counts[i]}명</td></tr>
+          ))}
+        </tbody>
+      </Table>
+      {q7others.length > 0 && <p className="small text-muted mb-4">기타 내용: {q7others.join(" / ")}</p>}
+
+      {/* Q8. 강의의 진로 설계 도움도 */}
+      <h6 className="border-start border-success border-4 ps-2 mt-2 mb-3">Q8. 강의의 진로 설계 도움도</h6>
+      <Table bordered size="sm" className="mb-4">
+        <thead className="table-success"><tr>{["전혀 아니다","아니다","보통이다","그렇다","매우 그렇다"].map(v=><th key={v}>{v}</th>)}</tr></thead>
         <tbody><tr>{q9counts.map((n,i)=><td key={i}>{n}명</td>)}</tr></tbody>
       </Table>
-      <h6 className="border-start border-success border-4 ps-2 mt-4 mb-3">Q12. 취득 희망 자격증</h6>
-      <Table bordered size="sm">
-        <thead className="table-success"><tr><th>자격증</th><th>선택 수</th></tr></thead>
-        <tbody>{CERTS_S4.map((c,i)=>certCounts[i]>0&&<tr key={c}><td>{c}</td><td>{certCounts[i]}명</td></tr>)}</tbody>
+
+      {/* Q9. 18필수과목 이수 인지 */}
+      <h6 className="border-start border-danger border-4 ps-2 mb-3">Q9. 18필수과목 이수 인지</h6>
+      <Table bordered size="sm" className="mb-2">
+        <thead className="table-danger"><tr><th>예</th><th>아니오</th><th>기타</th></tr></thead>
+        <tbody><tr><td>{q10.yes}명</td><td>{q10.no}명</td><td>{q10.etc}명</td></tr></tbody>
       </Table>
+      {q10others.length > 0 && <p className="small text-muted mb-4">기타 내용: {q10others.join(" / ")}</p>}
+
+      {/* Q11. 취득 희망 자격증 */}
+      <h6 className="border-start border-info border-4 ps-2 mt-2 mb-3">Q11. 취득 희망 자격증</h6>
+      <Table bordered size="sm" className="mb-2">
+        <thead className="table-info"><tr><th>자격증</th><th>선택 수</th></tr></thead>
+        <tbody>
+          {CERTS_S4.map((c,i)=><tr key={c}><td>{c}</td><td>{certCounts[i]}명</td></tr>)}
+        </tbody>
+      </Table>
+      {q12others.length > 0 && <p className="small text-muted mb-4">기타 내용: {q12others.join(" / ")}</p>}
+
+      {/* Q12. 졸업 후 희망 진로 순위 */}
+      <h6 className="border-start border-primary border-4 ps-2 mt-2 mb-3">Q12. 졸업 후 희망 진로 순위</h6>
+      <Table bordered size="sm" className="mb-4" responsive>
+        <thead className="table-primary">
+          <tr><th>진로</th><th>1순위</th><th>2순위</th><th>3순위</th><th>4순위</th><th>5순위</th></tr>
+        </thead>
+        <tbody>
+          {CAREERS_S4.map(c=>(
+            <tr key={c}>
+              <td>{c}</td>
+              {[1,2,3,4,5].map(n=><td key={n}>{careerRanks[c][n] > 0 ? `${careerRanks[c][n]}명` : "-"}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+
+      {/* Q13. 자유 기술 의견 */}
+      {q14texts.length > 0 && <>
+        <h6 className="border-start border-secondary border-4 ps-2 mb-3">Q13. 자유 기술 의견</h6>
+        <ul className="list-group">
+          {q14texts.map((t,i)=><li key={i} className="list-group-item py-1 small">{i+1}. {t}</li>)}
+        </ul>
+      </>}
     </>
   );
 }
