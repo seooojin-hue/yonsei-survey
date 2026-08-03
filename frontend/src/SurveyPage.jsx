@@ -450,8 +450,13 @@ function Survey0({ onSubmit }) {
         </Card.Body>
       </Card>
 
-      <div className="d-flex gap-2 justify-content-center my-4">
+      <div className="d-flex gap-2 justify-content-center flex-wrap my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
+        <Button variant="outline-warning" onClick={() => setAnswers(p => {
+          const f = {...p};
+          Object.keys(p).filter(k => /^s0q\d+_\d+$/.test(k)).forEach(k => { f[k] = 5; });
+          return f;
+        })}>전체 ⑤ 선택</Button>
         <Button type="reset" variant="outline-secondary" onClick={() => setAnswers(a => ({ ...a, gender: "", grade: "" }))}>초기화</Button>
       </div>
     </Form>
@@ -837,8 +842,13 @@ function Survey2({ onSubmit }) {
         </Card.Body>
       </Card>
 
-      <div className="d-flex gap-2 justify-content-center my-4">
+      <div className="d-flex gap-2 justify-content-center flex-wrap my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
+        <Button variant="outline-warning" onClick={() => setAnswers(p => {
+          const f = {...p};
+          Object.keys(p).filter(k => /^s2q\d+_\d+$/.test(k)).forEach(k => { f[k] = 5; });
+          return f;
+        })}>전체 ⑤ 선택</Button>
         <Button type="reset" variant="outline-secondary">초기화</Button>
       </div>
     </Form>
@@ -944,8 +954,13 @@ function Survey3({ onSubmit }) {
         </Card.Body>
       </Card>
 
-      <div className="d-flex gap-2 justify-content-center my-4">
+      <div className="d-flex gap-2 justify-content-center flex-wrap my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
+        <Button variant="outline-warning" onClick={() => setAnswers(p => {
+          const f = {...p};
+          Object.keys(p).filter(k => /^s3q\d+_\d+$/.test(k)).forEach(k => { f[k] = 5; });
+          return f;
+        })}>전체 ⑤ 선택</Button>
         <Button type="reset" variant="outline-secondary">초기화</Button>
       </div>
     </Form>
@@ -1593,8 +1608,13 @@ function Survey6({ onSubmit }) {
         </Card.Body>
       </Card>
 
-      <div className="d-flex gap-2 justify-content-center my-4">
+      <div className="d-flex gap-2 justify-content-center flex-wrap my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
+        <Button variant="outline-warning" onClick={() => setAnswers(p => {
+          const f = {...p};
+          Object.keys(p).filter(k => /^s6q\d+_\d+$/.test(k)).forEach(k => { f[k] = 5; });
+          return f;
+        })}>전체 ⑤ 선택</Button>
         <Button type="reset" variant="outline-secondary">초기화</Button>
       </div>
     </Form>
