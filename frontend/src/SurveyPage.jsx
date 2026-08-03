@@ -270,22 +270,23 @@ function ResultsTable({ labels, avgs }) {
     <Table striped bordered size="sm" className="mt-3">
       <thead className="table-primary">
         <tr>
-          <th>#</th>
+          <th style={{ width: 36 }}>#</th>
           <th>문항</th>
-          <th style={{ width: 70 }}>평균</th>
-          <th style={{ width: 120 }}>분포</th>
+          <th style={{ width: 64 }}>평균</th>
+          <th style={{ width: 180 }}>분포 (5점 만점)</th>
         </tr>
       </thead>
       <tbody>
         {labels.map((q, i) => (
           <tr key={i}>
-            <td className="text-primary fw-bold">{i + 1}</td>
+            <td className="text-primary fw-bold text-center">{i + 1}</td>
             <td style={{ fontSize: 12 }}>{q}</td>
-            <td className="fw-bold text-primary">{avgs[i] ? avgs[i].toFixed(2) : "-"}</td>
-            <td>
+            <td className="fw-bold text-primary text-center">{avgs[i] ? avgs[i].toFixed(2) : "-"}</td>
+            <td style={{ verticalAlign: "middle" }}>
               <ProgressBar
                 now={avgs[i] ? avgs[i] * 20 : 0}
-                style={{ height: 8 }}
+                label={avgs[i] ? `${(avgs[i]*20).toFixed(0)}%` : ""}
+                style={{ height: 14 }}
                 variant="primary"
               />
             </td>
