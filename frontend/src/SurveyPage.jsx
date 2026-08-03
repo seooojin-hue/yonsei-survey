@@ -193,14 +193,15 @@ function LikertTable({ questions, prefix, answers, onChange, labels = LIKERT_LAB
                 <strong className="text-primary">{qi + 1}.</strong> {q}
               </td>
               {[1, 2, 3, 4, 5].map((v) => (
-                <td key={v} className="text-center">
+                <td key={v} className="text-center" style={{ cursor: "pointer" }}
+                  onClick={() => onChange(`${prefix}_${qi}`, v)}>
                   <Form.Check
                     type="radio"
                     name={`${prefix}_${qi}`}
                     value={v}
                     checked={answers[`${prefix}_${qi}`] === v}
                     onChange={() => onChange(`${prefix}_${qi}`, v)}
-                    style={{ accentColor: "#0d6efd" }}
+                    style={{ accentColor: "#0d6efd", pointerEvents: "none" }}
                   />
                 </td>
               ))}
@@ -212,47 +213,54 @@ function LikertTable({ questions, prefix, answers, onChange, labels = LIKERT_LAB
   );
 }
 
-/** 결과 막대 그래프 (SVG — Chart.js 없이) */
+/** 결과 막대 그래프 (SVG — 픽셀 고정 높이) */
 function BarChart({ id, labels, data, color = "rgba(13,110,253,0.75)" }) {
   const maxVal = 5;
-  const rowH = 32;
-  const labelW = 220;
-  const barMaxW = 300;
-  const padY = 8;
-  const height = labels.length * rowH + padY * 2;
+  const rowH = 36;          // 행 높이 (px)
+  const labelW = 200;       // 라벨 영역 너비 (px)
+  const barMaxW = 320;      // 바 최대 너비 (px)
+  const axisH = 20;         // 하단 축 라벨 높이 (px)
+  const padTop = 6;
+  const svgW = labelW + barMaxW + 50;
+  const svgH = labels.length * rowH + padTop + axisH;
 
   return (
-    <svg width="100%" viewBox={`0 0 ${labelW + barMaxW + 60} ${height}`}
-      style={{ display: "block", fontFamily: "sans-serif", fontSize: 12 }}>
-      {labels.map((label, i) => {
-        const val = data[i] ?? 0;
-        const barW = (val / maxVal) * barMaxW;
-        const y = padY + i * rowH;
-        const short = label.length > 24 ? label.slice(0, 24) + "…" : label;
-        return (
-          <g key={i}>
-            <text x={labelW - 6} y={y + rowH / 2 + 4} textAnchor="end" fill="#333" fontSize={11}>
-              {short}
-            </text>
-            <rect x={labelW} y={y + 6} width={Math.max(barW, 2)} height={rowH - 12}
-              fill={color} rx={3} />
-            <text x={labelW + barW + 5} y={y + rowH / 2 + 4} fill="#555" fontSize={11}>
-              {val > 0 ? val.toFixed(2) : "-"}
-            </text>
-          </g>
-        );
-      })}
-      <line x1={labelW} y1={padY} x2={labelW} y2={height - padY} stroke="#ccc" />
-      {[0, 1, 2, 3, 4, 5].map(v => (
-        <g key={v}>
-          <line x1={labelW + (v / maxVal) * barMaxW} y1={padY}
-            x2={labelW + (v / maxVal) * barMaxW} y2={height - padY}
-            stroke="#eee" strokeDasharray="3,3" />
-          <text x={labelW + (v / maxVal) * barMaxW} y={height - 1}
-            textAnchor="middle" fill="#999" fontSize={10}>{v}</text>
-        </g>
-      ))}
-    </svg>
+    <div style={{ overflowX: "auto", marginBottom: 8 }}>
+      <svg width={svgW} height={svgH}
+        style={{ display: "block", fontFamily: "sans-serif", fontSize: 12, maxWidth: "100%" }}>
+        {/* 배경 그리드 */}
+        {[0,1,2,3,4,5].map(v => {
+          const x = labelW + (v / maxVal) * barMaxW;
+          return (
+            <g key={v}>
+              <line x1={x} y1={padTop} x2={x} y2={svgH - axisH}
+                stroke={v === 0 ? "#aaa" : "#e5e5e5"} strokeDasharray={v === 0 ? "" : "3,3"} />
+              <text x={x} y={svgH - 4} textAnchor="middle" fill="#999" fontSize={10}>{v}</text>
+            </g>
+          );
+        })}
+        {/* 바 + 라벨 */}
+        {labels.map((label, i) => {
+          const val = data[i] ?? 0;
+          const barW = (val / maxVal) * barMaxW;
+          const y = padTop + i * rowH;
+          const short = label.length > 20 ? label.slice(0, 20) + "…" : label;
+          return (
+            <g key={i}>
+              <text x={labelW - 6} y={y + rowH / 2 + 4}
+                textAnchor="end" fill="#333" fontSize={11}>
+                {short}
+              </text>
+              <rect x={labelW} y={y + 5} width={Math.max(barW, 2)} height={rowH - 10}
+                fill={color} rx={3} />
+              <text x={labelW + barW + 5} y={y + rowH / 2 + 4} fill="#555" fontSize={11}>
+                {val > 0 ? val.toFixed(2) : "-"}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
   );
 }
 
@@ -659,27 +667,80 @@ function Survey1({ onSubmit }) {
 }
 
 function Results1({ responses }) {
-  const careers = ["보건의료정보부서","보건교육","병원행정부서","공무원","보험회사"];
   const parseObj = (v) => typeof v === "string" ? JSON.parse(v || "{}") : (v || {});
+  const parseArr = (v) => typeof v === "string" ? JSON.parse(v || "[]") : (v || []);
+  const n = responses.length;
+
+  // 진로 희망 분야 (1순위 수)
+  const careers = ["보건의료정보부서","보건교육","병원행정부서","공무원","보험회사"];
   const careerCounts = careers.map(c =>
     responses.filter(r => parseObj(r.career)[c] === "1").length
   );
+
+  // 취득 희망 자격증
+  const CERTS_LIST = ["보건의료정보관리사","보건교육사","병원행정사","건강보험사","보험심사평가사","병원코디네이터","컴퓨터 활용능력","토익","기타"];
+  const certCounts = CERTS_LIST.map(c => responses.filter(r => parseArr(r.certs).includes(c)).length);
+
+  // q3 홈페이지 인지 (YES/NO)
+  const q3yes = responses.filter(r => r.q3 === "YES").length;
+  const q3no = responses.filter(r => r.q3 === "NO").length;
+
+  // q4 진로 설계 도움 (1~5)
+  const q4labels = ["①전혀아니다","②아니다","③보통이다","④그렇다","⑤매우그렇다"];
+  const q4counts = [1,2,3,4,5].map(v => responses.filter(r => Number(r.q4) === v).length);
+
+  // 취약 과목
   const weakCount = {};
   responses.forEach(r => {
-    const subs = typeof r.weakSubs === "string" ? JSON.parse(r.weakSubs || "[]") : (r.weakSubs || []);
-    subs.forEach(s => { weakCount[s] = (weakCount[s]||0)+1; });
+    parseArr(r.weakSubs).forEach(s => { weakCount[s] = (weakCount[s]||0)+1; });
   });
   const sortedWeak = Object.entries(weakCount).sort((a,b)=>b[1]-a[1]);
 
+  // 학습 요구도 평균 (subRatings: {si_ci: "5", ...})
+  const SUBJ_NAMES = SUBJECTS.map(([,s]) => s);
+  const DIM_LABELS = ["교육내용범위","교육내용수준","교육방법","평가방식"];
+  // 과목별 4개 항목 평균
+  const subjAvgs = SUBJ_NAMES.map((_, si) => {
+    const vals = responses.flatMap(r => {
+      const sr = parseObj(r.subRatings);
+      return [0,1,2,3].map(ci => Number(sr[`${si}_${ci}`])).filter(v => v > 0);
+    });
+    return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+  });
+  // 항목별 전 과목 평균
+  const dimAvgs = DIM_LABELS.map((_, ci) => {
+    const vals = responses.flatMap(r => {
+      const sr = parseObj(r.subRatings);
+      return SUBJ_NAMES.map((_, si) => Number(sr[`${si}_${ci}`])).filter(v => v > 0);
+    });
+    return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+  });
+
   return (
     <>
-      <h6 className="border-start border-primary border-4 ps-2 mb-3">1순위 진로 희망 분야</h6>
-      <div style={{ height: 260 }}>
-        <BarChart id="c1-1" labels={careers} data={careerCounts} color="rgba(13,110,253,0.7)" />
-      </div>
+      <h6 className="border-start border-primary border-4 ps-2 mb-2">1순위 진로 희망 분야</h6>
+      <BarChart id="c1-career" labels={careers} data={careerCounts} color="rgba(13,110,253,0.7)" />
+
+      <h6 className="border-start border-success border-4 ps-2 mt-4 mb-2">취득 희망 면허/자격증</h6>
+      <BarChart id="c1-certs" labels={CERTS_LIST} data={certCounts} color="rgba(25,135,84,0.7)" />
+
+      <h6 className="border-start border-warning border-4 ps-2 mt-4 mb-2">
+        홈페이지 공지 인지 여부 (YES/NO) — 응답 {n}명
+      </h6>
+      <Table bordered size="sm" style={{ maxWidth: 260 }}>
+        <thead className="table-warning"><tr><th>YES</th><th>NO</th></tr></thead>
+        <tbody><tr>
+          <td className="fw-bold text-success">{q3yes}명 ({n ? Math.round(q3yes/n*100) : 0}%)</td>
+          <td className="fw-bold text-danger">{q3no}명 ({n ? Math.round(q3no/n*100) : 0}%)</td>
+        </tr></tbody>
+      </Table>
+
+      <h6 className="border-start border-warning border-4 ps-2 mt-4 mb-2">진로 설계 도움 여부 분포</h6>
+      <BarChart id="c1-q4" labels={q4labels} data={q4counts} color="rgba(255,193,7,0.8)" />
+
       {sortedWeak.length > 0 && (
         <>
-          <h6 className="border-start border-danger border-4 ps-2 mt-4 mb-3">취약 과목 현황</h6>
+          <h6 className="border-start border-danger border-4 ps-2 mt-4 mb-2">취약 과목 현황</h6>
           <Table striped bordered size="sm">
             <thead className="table-danger"><tr><th>교과목</th><th>응답 수</th></tr></thead>
             <tbody>
@@ -690,6 +751,12 @@ function Results1({ responses }) {
           </Table>
         </>
       )}
+
+      <h6 className="border-start border-info border-4 ps-2 mt-4 mb-2">학습 요구도 — 항목별 평균</h6>
+      <BarChart id="c1-dim" labels={DIM_LABELS} data={dimAvgs} color="rgba(13,202,240,0.7)" />
+
+      <h6 className="border-start border-info border-4 ps-2 mt-4 mb-2">학습 요구도 — 과목별 평균</h6>
+      <BarChart id="c1-subj" labels={SUBJ_NAMES} data={subjAvgs} color="rgba(102,16,242,0.5)" />
     </>
   );
 }
@@ -1567,7 +1634,9 @@ function SurveyResults({ idx, responses }) {
 const SurveyPage = () => {
   const [activeTab, setActiveTab] = useState("s0");
   const [activeMode, setActiveMode] = useState({});
-  const [submitted, setSubmitted] = useState({});
+  const [submitted, setSubmitted] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("survey_submitted") || "{}"); } catch { return {}; }
+  });
   const [localResponses, setLocalResponses] = useState({});
   const [apiData, setApiData] = useState({});
   const [apiLoading, setApiLoading] = useState({});
@@ -1630,7 +1699,11 @@ const SurveyPage = () => {
       ...prev,
       [tabKey]: [...(prev[tabKey] || []), answers],
     }));
-    setSubmitted(prev => ({ ...prev, [tabKey]: true }));
+    setSubmitted(prev => {
+      const next = { ...prev, [tabKey]: true };
+      try { localStorage.setItem("survey_submitted", JSON.stringify(next)); } catch {}
+      return next;
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
     // 백엔드 저장 (실패해도 로컬은 유지)
     try {
@@ -1713,13 +1786,9 @@ const SurveyPage = () => {
                     <Card.Body className="text-center py-5">
                       <div style={{ fontSize: 52 }}>✅</div>
                       <h5 className="text-success mt-3 mb-2">설문이 제출되었습니다!</h5>
-                      <p className="text-muted mb-4" style={{ fontSize: 13 }}>
+                      <p className="text-muted mb-0" style={{ fontSize: 13 }}>
                         {UNIV} {DEPT} 설문에 응해주셔서 감사합니다.
                       </p>
-                      <Button variant="outline-primary"
-                        onClick={() => setSubmitted(p => ({ ...p, [t.key]: false }))}>
-                        새 응답 작성
-                      </Button>
                     </Card.Body>
                   </Card>
                 )
