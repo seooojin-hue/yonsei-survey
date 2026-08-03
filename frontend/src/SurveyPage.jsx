@@ -855,6 +855,100 @@ function Survey2({ onSubmit }) {
   );
 }
 
+/** ③ 산업체 설문 — 응답자별 개별 결과 */
+function Results2({ responses }) {
+  const SCORE = ["①","②","③","④","⑤"];
+  const sections = [
+    { label: "Ⅰ. 교육과정 및 운영", prefix: "s2q1", questions: s23_q1, color: "#0d6efd" },
+    { label: "Ⅱ. 산업체 만족도",    prefix: "s2q2", questions: s2_q2,  color: "#ffc107" },
+    { label: "Ⅲ. 학습성과",         prefix: "s2q3", questions: s23_q3, color: "#6610f2" },
+  ];
+
+  if (responses.length === 0) return (
+    <div className="text-center text-muted py-5">
+      <div style={{ fontSize: 40 }}>📭</div>
+      <p className="mt-2">아직 응답 데이터가 없습니다.</p>
+    </div>
+  );
+
+  return (
+    <>
+      <p className="text-muted mb-3" style={{ fontSize: 13 }}>총 {responses.length}명 응답</p>
+      {responses.map((r, ri) => (
+        <Card key={ri} className="mb-4 shadow-sm border-0">
+          <Card.Header className="bg-primary text-white fw-semibold py-2 px-3">
+            응답자 {ri + 1}
+          </Card.Header>
+          <Card.Body className="p-3">
+
+            {/* 인적사항 */}
+            <Table bordered size="sm" className="mb-3" style={{ fontSize: 13 }}>
+              <thead className="table-secondary">
+                <tr><th colSpan={6} className="text-center">응답자 인적사항</th></tr>
+                <tr>
+                  <th className="text-center">성별</th>
+                  <th className="text-center">연령</th>
+                  <th className="text-center">근무년수</th>
+                  <th className="text-center">산업체 종류</th>
+                  <th className="text-center">근무 부서</th>
+                  <th className="text-center">직급</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="text-center">
+                  <td>{r.gender || "-"}</td>
+                  <td>{r.age || "-"}</td>
+                  <td>{r.years || "-"}</td>
+                  <td>{r.orgType || "-"}</td>
+                  <td>{r.dept || "-"}</td>
+                  <td>{r.rank || "-"}</td>
+                </tr>
+              </tbody>
+            </Table>
+
+            {/* 섹션별 응답 */}
+            {sections.map(({ label, prefix, questions, color }) => (
+              <div key={prefix} className="mb-3">
+                <p className="fw-semibold mb-1" style={{ fontSize: 13, color }}>
+                  {label}
+                </p>
+                <Table bordered size="sm" style={{ fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ minWidth: 200 }}>문항</th>
+                      {[1,2,3,4,5].map(v => (
+                        <th key={v} className="text-center" style={{ width: 44 }}>{SCORE[v-1]}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {questions.map((q, qi) => {
+                      const val = Number(r[`${prefix}_${qi}`]);
+                      return (
+                        <tr key={qi}>
+                          <td>{qi + 1}. {q}</td>
+                          {[1,2,3,4,5].map(v => (
+                            <td key={v} className="text-center">
+                              {val === v
+                                ? <span style={{ color, fontWeight: "bold" }}>●</span>
+                                : <span style={{ color: "#ccc" }}>○</span>}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+            ))}
+          </Card.Body>
+        </Card>
+      ))}
+    </>
+  );
+}
+
+/** ③④ 공통 집계 결과 */
 function Results23({ responses, q2items, prefix2, prefix3, title }) {
   const a1 = getAvg(responses, `${title}q1`, s23_q1.length);
   const a2 = getAvg(responses, `${title}q2`, q2items.length);
@@ -862,17 +956,11 @@ function Results23({ responses, q2items, prefix2, prefix3, title }) {
   return (
     <>
       <h6 className="border-start border-primary border-4 ps-2 mb-3">교육과정 및 운영 평균 점수</h6>
-      <div style={{ height: Math.max(200, s23_q1.length * 34) }}>
-        <BarChart id={`${title}-c1`} labels={s23_q1} data={a1} color="rgba(13,110,253,0.7)" />
-      </div>
+      <BarChart id={`${title}-c1`} labels={s23_q1} data={a1} color="rgba(13,110,253,0.7)" />
       <h6 className="border-start border-warning border-4 ps-2 mt-4 mb-3">만족도 평균 점수</h6>
-      <div style={{ height: Math.max(200, q2items.length * 34) }}>
-        <BarChart id={`${title}-c2`} labels={q2items} data={a2} color="rgba(255,193,7,0.8)" />
-      </div>
+      <BarChart id={`${title}-c2`} labels={q2items} data={a2} color="rgba(255,193,7,0.8)" />
       <h6 className="border-start border-purple border-4 ps-2 mt-4 mb-3">학습성과 평균 점수</h6>
-      <div style={{ height: Math.max(200, s23_q3.length * 34) }}>
-        <BarChart id={`${title}-c3`} labels={s23_q3} data={a3} color="rgba(102,16,242,0.7)" />
-      </div>
+      <BarChart id={`${title}-c3`} labels={s23_q3} data={a3} color="rgba(102,16,242,0.7)" />
       <ResultsTable labels={[...s23_q1,...q2items,...s23_q3]} avgs={[...a1,...a2,...a3]} />
     </>
   );
@@ -1640,7 +1728,7 @@ function Results6({ responses }) {
 function SurveyResults({ idx, responses }) {
   if (idx === 0) return <Results0 responses={responses} />;
   if (idx === 1) return <Results1 responses={responses} />;
-  if (idx === 2) return <Results23 responses={responses} q2items={s2_q2} title="s2" />;
+  if (idx === 2) return <Results2 responses={responses} />;
   if (idx === 3) return <Results23 responses={responses} q2items={s3_q2} title="s3" />;
   if (idx === 4) return <Results4 responses={responses} />;
   if (idx === 5) return <Results5 responses={responses} />;
