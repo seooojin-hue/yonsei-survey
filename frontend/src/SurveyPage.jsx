@@ -1806,9 +1806,21 @@ const SurveyPage = () => {
                     <Card.Body className="text-center py-5">
                       <div style={{ fontSize: 52 }}>✅</div>
                       <h5 className="text-success mt-3 mb-2">설문이 제출되었습니다!</h5>
-                      <p className="text-muted mb-0" style={{ fontSize: 13 }}>
+                      <p className="text-muted mb-3" style={{ fontSize: 13 }}>
                         {UNIV} {DEPT} 설문에 응해주셔서 감사합니다.
                       </p>
+                      {adminUnlocked && (
+                        <Button variant="outline-danger" size="sm"
+                          onClick={() => {
+                            setSubmitted(p => {
+                              const next = { ...p, [t.key]: false };
+                              try { localStorage.setItem("survey_submitted", JSON.stringify(next)); } catch {}
+                              return next;
+                            });
+                          }}>
+                          🔓 관리자 — 다시 제출하기
+                        </Button>
+                      )}
                     </Card.Body>
                   </Card>
                 )
