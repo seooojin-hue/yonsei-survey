@@ -1972,8 +1972,8 @@ const SurveyPage = ({ surveyType } = {}) => {
         </p>
       </div>
 
-      {/* surveyType이 지정된 경우(개별 링크 접속) 탭 내비게이션 숨김 */}
-      {!surveyType && (
+      {/* 탭이 2개 이상일 때는 개별 링크여도 탭 내비게이션 표시 (student: s0+s1) */}
+      {(!surveyType || (allowedTabs && allowedTabs.length > 1)) && (
         <div style={{ background: "white", borderBottom: "1px solid #dee2e6", overflowX: "auto" }}>
           <Nav variant="tabs" className="border-0 flex-nowrap px-2" style={{ minWidth: "max-content" }}
             activeKey={activeTab} onSelect={setActiveTab}>
