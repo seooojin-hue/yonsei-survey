@@ -1859,17 +1859,19 @@ function SurveyResults({ idx, responses }) {
 //  메인 페이지 컴포넌트
 //  surveyType: "student" | "industry" | "graduate" | "awareness" | "exam-need" | "exam-satisfaction" | undefined(전체)
 // ============================================================
-const SURVEY_TYPE_TAB = {
-  "student":           "s0",
-  "industry":          "s2",
-  "graduate":          "s3",
-  "awareness":         "s4",
-  "exam-need":         "s5",
-  "exam-satisfaction": "s6",
+// 배열로 변경 — student는 s0, s1 둘 다 포함
+const SURVEY_TYPE_TABS = {
+  "student":           ["s0", "s1"],
+  "industry":          ["s2"],
+  "graduate":          ["s3"],
+  "awareness":         ["s4"],
+  "exam-need":         ["s5"],
+  "exam-satisfaction": ["s6"],
 };
 
 const SurveyPage = ({ surveyType } = {}) => {
-  const defaultTab = surveyType ? (SURVEY_TYPE_TAB[surveyType] || "s0") : "s0";
+  const allowedTabs = surveyType ? (SURVEY_TYPE_TABS[surveyType] || ["s0"]) : null;
+  const defaultTab = allowedTabs ? allowedTabs[0] : "s0";
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [activeMode, setActiveMode] = useState({});
   const [submitted, setSubmitted] = useState(() => {
@@ -1992,7 +1994,7 @@ const SurveyPage = ({ surveyType } = {}) => {
 
       <Container style={{ maxWidth: 820, padding: "20px 16px 80px" }}>
         {SURVEY_TABS
-          .filter(t => !surveyType || t.key === (SURVEY_TYPE_TAB[surveyType] || "s0"))
+          .filter(t => !allowedTabs || allowedTabs.includes(t.key))
           .map((t, i) => {
           const idx = SURVEY_TABS.findIndex(x => x.key === t.key);
           const SurveyForm = SURVEY_FORMS[idx];
