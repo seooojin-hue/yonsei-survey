@@ -227,8 +227,10 @@ function LikertTable({ questions, prefix, answers, onChange, labels = LIKERT_LAB
 }
 
 /** 결과 막대 그래프 (SVG — 픽셀 고정 높이) */
-function BarChart({ id, labels, data, color = "rgba(13,110,253,0.75)" }) {
-  const maxVal = 5;
+function BarChart({ id, labels, data, color = "rgba(13,110,253,0.75)", maxVal: maxValProp }) {
+  const dataMax = Math.max(...data, 1);
+  const maxVal = maxValProp ?? (dataMax <= 5 ? 5 : Math.ceil(dataMax / 5) * 5);
+  const tickCount = maxVal <= 5 ? maxVal : 5;
   const rowH = 36;          // 행 높이 (px)
   const labelW = 200;       // 라벨 영역 너비 (px)
   const barMaxW = 320;      // 바 최대 너비 (px)
@@ -242,13 +244,14 @@ function BarChart({ id, labels, data, color = "rgba(13,110,253,0.75)" }) {
       <svg width={svgW} height={svgH}
         style={{ display: "block", fontFamily: "sans-serif", fontSize: 12, maxWidth: "100%" }}>
         {/* 배경 그리드 */}
-        {[0,1,2,3,4,5].map(v => {
-          const x = labelW + (v / maxVal) * barMaxW;
+        {Array.from({length: tickCount + 1}, (_, i) => i).map(v => {
+          const tickVal = Math.round((v / tickCount) * maxVal);
+          const x = labelW + (tickVal / maxVal) * barMaxW;
           return (
             <g key={v}>
               <line x1={x} y1={padTop} x2={x} y2={svgH - axisH}
                 stroke={v === 0 ? "#aaa" : "#e5e5e5"} strokeDasharray={v === 0 ? "" : "3,3"} />
-              <text x={x} y={svgH - 4} textAnchor="middle" fill="#999" fontSize={10}>{v}</text>
+              <text x={x} y={svgH - 4} textAnchor="middle" fill="#999" fontSize={10}>{tickVal}</text>
             </g>
           );
         })}
@@ -690,10 +693,14 @@ function Results1({ responses }) {
   const parseArr = (v) => typeof v === "string" ? JSON.parse(v || "[]") : (v || []);
   const n = responses.length;
 
-  // 진로 희망 분야 (1순위 수)
+  // 진로 희망 분야 (가중 점수: 1순위=5점, 2순위=4점, 3순위=3점, 4순위=2점, 5순위=1점)
   const careers = ["보건의료정보부서","보건교육","병원행정부서","공무원","보험회사"];
-  const careerCounts = careers.map(c =>
-    responses.filter(r => parseObj(r.career)[c] === "1").length
+  const careerScores = careers.map(c =>
+    responses.reduce((sum, r) => {
+      const rank = Number(parseObj(r.career)[c]);
+      if (rank >= 1 && rank <= 5) return sum + (6 - rank);
+      return sum;
+    }, 0)
   );
 
   // 취득 희망 자격증
@@ -737,8 +744,8 @@ function Results1({ responses }) {
 
   return (
     <>
-      <h6 className="border-start border-primary border-4 ps-2 mb-2">1순위 진로 희망 분야</h6>
-      <BarChart id="c1-career" labels={careers} data={careerCounts} color="rgba(13,110,253,0.7)" />
+      <h6 className="border-start border-primary border-4 ps-2 mb-2">진로 희망 분야 (가중 점수: 1순위=5점 ~ 5순위=1점)</h6>
+      <BarChart id="c1-career" labels={careers} data={careerScores} color="rgba(13,110,253,0.7)" />
 
       <h6 className="border-start border-success border-4 ps-2 mt-4 mb-2">취득 희망 면허/자격증</h6>
       <BarChart id="c1-certs" labels={CERTS_LIST} data={certCounts} color="rgba(25,135,84,0.7)" />
@@ -1528,6 +1535,10 @@ function Results4({ responses }) {
     const obj = parseObj(r.q13);
     CAREERS_S4.forEach(c => { const n = Number(obj[c]); if (n>=1 && n<=5) careerRanks[c][n]++; });
   });
+  // 가중 점수 (1순위=5점, 2순위=4점, 3순위=3점, 4순위=2점, 5순위=1점)
+  const careerWeightedScores = CAREERS_S4.map(c =>
+    [1,2,3,4,5].reduce((sum, rank) => sum + careerRanks[c][rank] * (6 - rank), 0)
+  );
 
   // 주관식 텍스트 수집
   const q4texts = responses.filter(r=>r.q3==="예" && r.q4 && r.q4.trim()).map(r=>r.q4.trim());
@@ -1611,19 +1622,22 @@ function Results4({ responses }) {
 
       {/* Q12. 졸업 후 희망 진로 순위 */}
       <h6 className="border-start border-primary border-4 ps-2 mt-2 mb-3">Q12. 졸업 후 희망 진로 순위</h6>
-      <Table bordered size="sm" className="mb-4" responsive>
+      <Table bordered size="sm" className="mb-2" responsive>
         <thead className="table-primary">
-          <tr><th>진로</th><th>1순위</th><th>2순위</th><th>3순위</th><th>4순위</th><th>5순위</th></tr>
+          <tr><th>진로</th><th>1순위</th><th>2순위</th><th>3순위</th><th>4순위</th><th>5순위</th><th className="table-warning">가중점수</th></tr>
         </thead>
         <tbody>
-          {CAREERS_S4.map(c=>(
+          {CAREERS_S4.map((c, i)=>(
             <tr key={c}>
               <td>{c}</td>
               {[1,2,3,4,5].map(n=><td key={n}>{careerRanks[c][n] > 0 ? `${careerRanks[c][n]}명` : "-"}</td>)}
+              <td className="fw-bold table-warning">{careerWeightedScores[i]}</td>
             </tr>
           ))}
         </tbody>
       </Table>
+      <p className="text-muted small mb-3">※ 가중점수: 1순위=5점, 2순위=4점, 3순위=3점, 4순위=2점, 5순위=1점 합산</p>
+      <BarChart id="c3-career-weighted" labels={CAREERS_S4} data={careerWeightedScores} color="rgba(13,110,253,0.7)" />
 
       {/* Q13. 자유 기술 의견 */}
       {q14texts.length > 0 && <>
