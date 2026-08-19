@@ -469,11 +469,6 @@ function Survey0({ onSubmit }) {
 
       <div className="d-flex gap-2 justify-content-center flex-wrap my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
-        <Button variant="outline-warning" onClick={() => setAnswers(p => {
-          const f = {...p};
-          Object.keys(p).filter(k => /^s0q\d+_\d+$/.test(k)).forEach(k => { f[k] = 5; });
-          return f;
-        })}>전체 ⑤ 선택</Button>
         <Button type="reset" variant="outline-secondary" onClick={() => setAnswers(a => ({ ...a, gender: "", grade: "" }))}>초기화</Button>
       </div>
     </Form>
@@ -630,18 +625,6 @@ function Survey1({ onSubmit }) {
             ▪ <strong>학습성취</strong>: 현재까지 수강한 교과목 중 본인이 생각하기에 취약한 교과목에 √ 표시를 해주시기 바랍니다(하나 이상).<br/>
             ▪ <strong>학습 요구도</strong>: 교육의 적절성에 대한 질문입니다. 본인이 생각하는 각 교과목에 대한 적절성에 해당 되는 번호에 √ 표시를 해주시기 바랍니다.
           </Alert>
-          <div className="d-flex justify-content-end mb-2">
-            <Button size="sm" variant="outline-success"
-              onClick={() => {
-                const all = {};
-                SUBJECTS.forEach((_, si) => {
-                  [0,1,2,3].forEach(ci => { all[`${si}_${ci}`] = "5"; });
-                });
-                set("subRatings", { ...answers.subRatings, ...all });
-              }}>
-              ⑤ 전체 매우높음 선택
-            </Button>
-          </div>
           <div className="table-responsive">
             <Table bordered hover size="sm" style={{ minWidth: 640, fontSize: 12 }}>
               <thead className="table-primary">
@@ -865,11 +848,6 @@ function Survey2({ onSubmit }) {
 
       <div className="d-flex gap-2 justify-content-center flex-wrap my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
-        <Button variant="outline-warning" onClick={() => setAnswers(p => {
-          const f = {...p};
-          Object.keys(p).filter(k => /^s2q\d+_\d+$/.test(k)).forEach(k => { f[k] = 5; });
-          return f;
-        })}>전체 ⑤ 선택</Button>
         <Button type="reset" variant="outline-secondary">초기화</Button>
       </div>
     </Form>
@@ -887,9 +865,34 @@ function IndividualResults({ responses, sections }) {
     </div>
   );
 
+  // 섹션별 평균 차트 색상 매핑
+  const colorMap = { "#0d6efd": "rgba(13,110,253,0.7)", "#ffc107": "rgba(255,193,7,0.8)", "#6610f2": "rgba(102,16,242,0.7)" };
+
   return (
     <>
       <p className="text-muted mb-3" style={{ fontSize: 13 }}>총 {responses.length}명 응답</p>
+
+      {/* 섹션별 집계 막대차트 */}
+      {sections.map(({ label, prefix, questions, color }) => {
+        const avgs = getAvg(responses, prefix, questions.length);
+        return (
+          <div key={prefix} className="mb-4">
+            <h6 className="border-start border-4 ps-2 mb-3" style={{ borderColor: color }}>
+              {label} 평균 점수
+            </h6>
+            <BarChart
+              id={`agg-${prefix}`}
+              labels={questions}
+              data={avgs}
+              color={colorMap[color] || "rgba(13,110,253,0.7)"}
+            />
+            <ResultsTable labels={questions} avgs={avgs} />
+          </div>
+        );
+      })}
+
+      <hr className="my-4" />
+      <h6 className="border-start border-secondary border-4 ps-2 mb-3">개별 응답 상세</h6>
       {responses.map((r, ri) => (
         <Card key={ri} className="mb-4 shadow-sm border-0">
           <Card.Header className="bg-primary text-white fw-semibold py-2 px-3">
@@ -1060,11 +1063,6 @@ function Survey3({ onSubmit }) {
 
       <div className="d-flex gap-2 justify-content-center flex-wrap my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
-        <Button variant="outline-warning" onClick={() => setAnswers(p => {
-          const f = {...p};
-          Object.keys(p).filter(k => /^s3q\d+_\d+$/.test(k)).forEach(k => { f[k] = 5; });
-          return f;
-        })}>전체 ⑤ 선택</Button>
         <Button type="reset" variant="outline-secondary">초기화</Button>
       </div>
     </Form>
@@ -1818,11 +1816,6 @@ function Survey6({ onSubmit }) {
 
       <div className="d-flex gap-2 justify-content-center flex-wrap my-4">
         <Button type="submit" variant="primary" size="lg" className="px-5">설문 제출하기</Button>
-        <Button variant="outline-warning" onClick={() => setAnswers(p => {
-          const f = {...p};
-          Object.keys(p).filter(k => /^s6q\d+_\d+$/.test(k)).forEach(k => { f[k] = 5; });
-          return f;
-        })}>전체 ⑤ 선택</Button>
         <Button type="reset" variant="outline-secondary">초기화</Button>
       </div>
     </Form>
