@@ -1972,12 +1972,12 @@ const SurveyPage = ({ surveyType } = {}) => {
         </p>
       </div>
 
-      {/* 탭이 2개 이상일 때는 개별 링크여도 탭 내비게이션 표시 (student: s0+s1) */}
+      {/* surveyType이 없거나 허용 탭이 2개 이상인 경우에만 내비게이션 표시 */}
       {(!surveyType || (allowedTabs && allowedTabs.length > 1)) && (
         <div style={{ background: "white", borderBottom: "1px solid #dee2e6", overflowX: "auto" }}>
           <Nav variant="tabs" className="border-0 flex-nowrap px-2" style={{ minWidth: "max-content" }}
             activeKey={activeTab} onSelect={setActiveTab}>
-            {SURVEY_TABS.map((t) => (
+            {SURVEY_TABS.filter(t => !allowedTabs || allowedTabs.includes(t.key)).map((t) => (
               <Nav.Item key={t.key}>
                 <Nav.Link eventKey={t.key} className="text-nowrap px-3" style={{ fontSize: 13 }}>
                   {t.title}{" "}
