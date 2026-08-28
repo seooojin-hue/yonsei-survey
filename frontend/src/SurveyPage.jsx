@@ -524,7 +524,7 @@ function Survey1({ onSubmit }) {
     }));
   };
 
-  const CERTS = ["보건의료정보관리사","보건교육사","병원행정사","건강보험사","보험심사평가사","병원코디네이터","컴퓨터 활용능력","토익","기타"];
+  const CERTS = ["보건의료정보관리사","ADSp","SQL","컴퓨터활용능력1급","사회조사분석사","기타"];
   const CAREER_ITEMS = ["보건의료정보부서","보건교육","병원행정부서","공무원","보험회사"];
 
   return (
@@ -687,7 +687,7 @@ function Results1({ responses }) {
   );
 
   // 취득 희망 자격증
-  const CERTS_LIST = ["보건의료정보관리사","보건교육사","병원행정사","건강보험사","보험심사평가사","병원코디네이터","컴퓨터 활용능력","토익","기타"];
+  const CERTS_LIST = ["보건의료정보관리사","ADSp","SQL","컴퓨터활용능력1급","사회조사분석사","기타"];
   const certCounts = CERTS_LIST.map(c => responses.filter(r => parseArr(r.certs).includes(c)).length);
 
   // q3 홈페이지 인지 (YES/NO)
