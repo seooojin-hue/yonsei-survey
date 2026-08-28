@@ -1032,8 +1032,8 @@ const PREREQ_ROWS = [
   ["","질병 및 의료행위분류","3-1",2,"의무기록정보 질향상 실무","4-2",3],
   ["","보건의료정보관리학","2-1",3,"보건의료정보관리 실무","4-2",3],
 ];
-const CAREERS_S4 = ["보건의료정보팀","병원 원무부서","병원 총무 등의 행정부서","보험회사","기타"];
-const CERTS_S4 = ["보건의료정보관리사","보건교육사","병원행정사","건강보험사","보험심사평가사","병원코디네이터","컴퓨터활용능력","토익","기타"];
+const CAREERS_S4 = ["보건의료정보팀","병원행정부서","AI 산업체","공단등의 공기업(공무원)","대학원","기타"];
+const CERTS_S4 = ["보건의료정보관리사","ADSp","SQL","컴퓨터활용능력1급","사회조사분석사","기타"];
 const Q7_OPTIONS = ["신입생 OT","전과생 OT","학과 MT","학과 사무실 게시판","기타"];
 
 function Survey4({ onSubmit }) {
@@ -1042,7 +1042,7 @@ function Survey4({ onSubmit }) {
     q7:[], q7other:"", q8:"", q9:"",
     q10:"", q10other:"", q11:"",
     q12:[], q12other:"",
-    q13: Object.fromEntries(CAREERS_S4.map(c=>[c,0])),
+    q13: Object.fromEntries(CAREERS_S4.map(c=>[c,0])), q13other:"",
     q14:"",
   });
   const [errors, setErrors] = useState({});
@@ -1301,7 +1301,7 @@ function Survey4({ onSubmit }) {
           <Form.Label className="fw-semibold">9. 보건의료정보관리프로그램을 국가 고시를 응시하기 위해서는 프로그램에서 제공되는 아래 18개의 필수 과목을 반드시 이수해야 함을 알고 있습니까?</Form.Label>
           <div className="table-responsive my-3">
             <Table bordered size="sm" style={{fontSize:12}}>
-              <thead className="table-primary"><tr><th>#</th><th>교과목</th><th>학점</th><th>비고</th></tr></thead>
+              <thead className="table-primary"><tr><th>#</th><th>교과목</th><th>인정학점</th><th>비고</th></tr></thead>
               <tbody>
                 {SUBJECTS_18.map(([name,credit,note],i)=>(
                   <tr key={i}><td>{i+1}</td><td>{name}</td><td>{credit}</td><td>{note}</td></tr>
@@ -1375,18 +1375,18 @@ function Survey4({ onSubmit }) {
       <Card className="mb-3 shadow-sm border-0" ref={refQ13}>
         <Card.Body>
           <div style={errStyle("q13")}>
-            <Form.Label className="fw-semibold">12. 졸업 후 희망하는 진로는 무엇입니까? (1부터 5까지 순서로 적어주세요)</Form.Label>
+            <Form.Label className="fw-semibold">12. 졸업 후 희망하는 진로는 무엇입니까? (1부터 6까지 순서로 적어주세요)</Form.Label>
             <p className="text-muted small mb-1">행당 한 개의 타원형만 표시합니다</p>
             <div className="table-responsive mt-2">
               <Table bordered size="sm" style={{fontSize:12}}>
                 <thead className="table-primary">
-                  <tr><th>진로</th>{[1,2,3,4,5].map(n=><th key={n} className="text-center">{n}</th>)}</tr>
+                  <tr><th>진로</th>{[1,2,3,4,5,6].map(n=><th key={n} className="text-center">{n}</th>)}</tr>
                 </thead>
                 <tbody>
                   {CAREERS_S4.map(c=>(
                     <tr key={c}>
                       <td style={{minWidth:140}}>{c}</td>
-                      {[1,2,3,4,5].map(n=>(
+                      {[1,2,3,4,5,6].map(n=>(
                         <td key={n} className="text-center">
                           <Form.Check type="radio" name={`s4q13_${c}`} value={n}
                             checked={answers.q13[c]===n}
@@ -1400,6 +1400,7 @@ function Survey4({ onSubmit }) {
             </div>
             {errMsg("q13")}
           </div>
+          <Form.Control size="sm" className="mt-2" placeholder="기타 진로 기재" value={answers.q13other} onChange={e=>set("q13other",e.target.value)} />
         </Card.Body>
       </Card>
 
@@ -1456,14 +1457,14 @@ function Results4({ responses }) {
 
   // Q12. 진로 희망 순위 집계
   const careerRanks = {};
-  CAREERS_S4.forEach(c => { careerRanks[c] = {1:0,2:0,3:0,4:0,5:0}; });
+  CAREERS_S4.forEach(c => { careerRanks[c] = {1:0,2:0,3:0,4:0,5:0,6:0}; });
   responses.forEach(r => {
     const obj = parseObj(r.q13);
-    CAREERS_S4.forEach(c => { const n = Number(obj[c]); if (n>=1 && n<=5) careerRanks[c][n]++; });
+    CAREERS_S4.forEach(c => { const n = Number(obj[c]); if (n>=1 && n<=6) careerRanks[c][n]++; });
   });
-  // 가중 점수 (1순위=5점, 2순위=4점, 3순위=3점, 4순위=2점, 5순위=1점)
+  // 가중 점수 (1순위=6점, 2순위=5점, ..., 6순위=1점)
   const careerWeightedScores = CAREERS_S4.map(c =>
-    [1,2,3,4,5].reduce((sum, rank) => sum + careerRanks[c][rank] * (6 - rank), 0)
+    [1,2,3,4,5,6].reduce((sum, rank) => sum + careerRanks[c][rank] * (7 - rank), 0)
   );
 
   // 주관식 텍스트 수집
@@ -1471,6 +1472,7 @@ function Results4({ responses }) {
   const q7others = responses.filter(r=>parseArr(r.q7).includes("기타") && r.q7other && r.q7other.trim()).map(r=>r.q7other.trim());
   const q10others = responses.filter(r=>r.q10==="기타" && r.q10other && r.q10other.trim()).map(r=>r.q10other.trim());
   const q12others = responses.filter(r=>parseArr(r.q12).includes("기타") && r.q12other && r.q12other.trim()).map(r=>r.q12other.trim());
+  const q13others = responses.filter(r=>r.q13other && r.q13other.trim()).map(r=>r.q13other.trim());
   const q14texts = responses.filter(r=>r.q14 && r.q14.trim()).map(r=>r.q14.trim());
 
   return (
@@ -1550,19 +1552,20 @@ function Results4({ responses }) {
       <h6 className="border-start border-primary border-4 ps-2 mt-2 mb-3">Q12. 졸업 후 희망 진로 순위</h6>
       <Table bordered size="sm" className="mb-2" responsive>
         <thead className="table-primary">
-          <tr><th>진로</th><th>1순위</th><th>2순위</th><th>3순위</th><th>4순위</th><th>5순위</th><th className="table-warning">가중점수</th></tr>
+          <tr><th>진로</th><th>1순위</th><th>2순위</th><th>3순위</th><th>4순위</th><th>5순위</th><th>6순위</th><th className="table-warning">가중점수</th></tr>
         </thead>
         <tbody>
           {CAREERS_S4.map((c, i)=>(
             <tr key={c}>
               <td>{c}</td>
-              {[1,2,3,4,5].map(n=><td key={n}>{careerRanks[c][n] > 0 ? `${careerRanks[c][n]}명` : "-"}</td>)}
+              {[1,2,3,4,5,6].map(n=><td key={n}>{careerRanks[c][n] > 0 ? `${careerRanks[c][n]}명` : "-"}</td>)}
               <td className="fw-bold table-warning">{careerWeightedScores[i]}</td>
             </tr>
           ))}
         </tbody>
       </Table>
-      <p className="text-muted small mb-3">※ 가중점수: 1순위=5점, 2순위=4점, 3순위=3점, 4순위=2점, 5순위=1점 합산</p>
+      <p className="text-muted small mb-3">※ 가중점수: 1순위=6점, 2순위=5점, 3순위=4점, 4순위=3점, 5순위=2점, 6순위=1점 합산</p>
+      {q13others.length > 0 && <p className="small text-muted mb-2">기타 진로 내용: {q13others.join(" / ")}</p>}
       <BarChart id="c3-career-weighted" labels={CAREERS_S4} data={careerWeightedScores} color="rgba(13,110,253,0.7)" />
 
       {/* Q13. 자유 기술 의견 */}
