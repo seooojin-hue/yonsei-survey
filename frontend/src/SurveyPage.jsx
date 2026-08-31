@@ -775,7 +775,7 @@ function Results1({ responses }) {
 // ============================================================
 function Survey2({ onSubmit }) {
   const [answers, setAnswers] = useState({
-    gender:"", age:"", years:"", orgType:"", dept:"", rank:"",
+    gender:"", age:"", years:"", orgType:"", orgTypeOther:"", dept:"", rank:"",
     ...initLikert("s2q1", s23_q1.length),
     ...initLikert("s2q2", s2_q2.length),
     ...initLikert("s2q3", s23_q3.length),
@@ -836,7 +836,12 @@ function Survey2({ onSubmit }) {
               <tr><td className="fw-semibold bg-light">근무년수</td>
                 <td><InfoRadio name="years" options={["5년 미만","5~10년 미만","10년 이상"]} value={answers.years} onChange={set} /></td></tr>
               <tr><td className="fw-semibold bg-light">산업체 종류</td>
-                <td><InfoRadio name="orgType" options={["의료기관","공공기관","디지털헬스·의료기기 기업","기타"]} value={answers.orgType} onChange={set} /></td></tr>
+                <td>
+                  <InfoRadio name="orgType" options={["의료기관","공공기관","디지털헬스·의료기기 기업","기타"]} value={answers.orgType} onChange={set} />
+                  {answers.orgType === "기타" && (
+                    <Form.Control size="sm" className="mt-2" style={{maxWidth:280}} placeholder="기타 산업체를 직접 입력해 주세요" value={answers.orgTypeOther} onChange={e=>set("orgTypeOther",e.target.value)} />
+                  )}
+                </td></tr>
               <tr><td className="fw-semibold bg-light">근무 부서</td>
                 <td><Form.Control size="sm" value={answers.dept} onChange={e=>set("dept",e.target.value)} /></td></tr>
               <tr><td className="fw-semibold bg-light">직급</td>
@@ -918,7 +923,7 @@ function Results23({ responses, q2items, prefix2, prefix3, title }) {
 // ============================================================
 function Survey3({ onSubmit }) {
   const [answers, setAnswers] = useState({
-    gender:"", age:"", years:"", orgType:"", dept:"", rank:"",
+    gender:"", age:"", years:"", orgType:"", orgTypeOther:"", dept:"", rank:"",
     ...initLikert("s3q1", s23_q1.length),
     ...initLikert("s3q2", s3_q2.length),
     ...initLikert("s3q3", s23_q3.length),
@@ -979,7 +984,12 @@ function Survey3({ onSubmit }) {
               <tr><td className="fw-semibold bg-light">근무년수</td>
                 <td><InfoRadio name="years" options={["5년 미만","5~10년 미만","10년 이상"]} value={answers.years} onChange={set} /></td></tr>
               <tr><td className="fw-semibold bg-light">산업체 종류</td>
-                <td><InfoRadio name="orgType" options={["의료기관","공공기관","디지털헬스·의료기기 기업","기타"]} value={answers.orgType} onChange={set} /></td></tr>
+                <td>
+                  <InfoRadio name="orgType" options={["의료기관","공공기관","디지털헬스·의료기기 기업","기타"]} value={answers.orgType} onChange={set} />
+                  {answers.orgType === "기타" && (
+                    <Form.Control size="sm" className="mt-2" style={{maxWidth:280}} placeholder="기타 산업체를 직접 입력해 주세요" value={answers.orgTypeOther} onChange={e=>set("orgTypeOther",e.target.value)} />
+                  )}
+                </td></tr>
               <tr><td className="fw-semibold bg-light">근무 부서</td>
                 <td><Form.Control size="sm" value={answers.dept} onChange={e=>set("dept",e.target.value)} /></td></tr>
               <tr><td className="fw-semibold bg-light">직급</td>
