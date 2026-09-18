@@ -356,7 +356,7 @@ function InfoRadio({ name, options, value, onChange }) {
 // ============================================================
 function getAvg(responses, prefix, count) {
   return Array.from({ length: count }, (_, i) => {
-    const vals = responses.map((r) => r[`${prefix}_${i}`]).filter((v) => v > 0);
+    const vals = responses.map((r) => Number(r[`${prefix}_${i}`])).filter((v) => v > 0);
     return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
   });
 }
